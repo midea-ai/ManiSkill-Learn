@@ -1,0 +1,12 @@
+*.pth
+*.npy
+*.log
+*.png
+*.pkl
+*.json
+*.csv
+*.txt
+*.zip
+*.h5
+*.ckpt
+events*
