@@ -77,6 +77,7 @@ class Evaluation:
         if work_dir is not None:
             self.work_dir = work_dir if self.worker_id is None else os.path.join(work_dir, f'thread_{self.worker_id}')
             shutil.rmtree(self.work_dir, ignore_errors=True)
+            os.makedirs(self.work_dir, exist_ok=True)
             if self.save_video:
                 self.video_dir = osp.join(self.work_dir, 'videos')
                 os.makedirs(self.video_dir, exist_ok=True)
