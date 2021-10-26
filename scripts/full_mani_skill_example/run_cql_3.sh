@@ -3,7 +3,7 @@
 # change the network config
 # increase eval_cfg.num_procs for parallel evaluation
 
-model_list=$(python -c "import mani_skill, os, os.path as osp; print(osp.abspath(osp.join(osp.dirname(mani_skill.__file__), 'assets', 'config_files', 'cabinet_models_drawer.yml')))")
+model_list=$(python -c "import mani_skill, os, os.path as osp; print(osp.abspath(osp.join(osp.dirname(mani_skill.__file__), 'assets', 'config_files', 'chair_models.yml')))")
 
 
 # python -m tools.run_rl configs/cql/mani_skill_point_cloud_transformer.py --gpu-ids=0 \
