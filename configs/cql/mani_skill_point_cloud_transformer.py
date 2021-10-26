@@ -18,7 +18,7 @@ train_mfrl_cfg = dict(
     n_steps=0,
     n_updates=500,
     n_eval=150000,
-    n_checkpoint=500,
+    n_checkpoint=5000,
     init_replay_buffers='./example_mani_skill_data/OpenCabinetDrawer_1045_link_0-v0_pcd.h5',
 )
 
