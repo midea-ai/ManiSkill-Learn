@@ -11,7 +11,6 @@ from mani_skill_learn.utils.data import to_np, unsqueeze
 from mani_skill_learn.utils.meta import Config
 from mani_skill_learn.utils.torch import load_checkpoint
 
-import os
 
 class ObsProcess:
     # modified from SapienRLWrapper
@@ -69,9 +68,7 @@ class UserPolicy(BasePolicy):
         self.env.set_env_mode(obs_mode=self.obs_mode)
         self.stack_frame = 1
 
-        # cfg_path = str(pathlib.Path('./configs/bc/mani_skill_point_cloud_transformer.py').resolve())
-        cfg_path = os.path.join(os.path.dirname(__file__), '../configs/cql/mani_skill_point_cloud_transformer.py')
-        cfg_path = str(pathlib.Path(cfg_path).resolve())
+        cfg_path = str(pathlib.Path('./configs/bc/mani_skill_point_cloud_transformer.py').resolve())
         cfg = Config.fromfile(cfg_path)
         cfg.env_cfg['env_name'] = env_name
         obs_shape, action_shape, action_space = get_env_info(cfg.env_cfg)
@@ -80,20 +77,8 @@ class UserPolicy(BasePolicy):
         cfg.agent['action_space'] = action_space
 
         self.agent = build_brl(cfg.agent)
-        if env_name.find('Bucket') >= 0:
-            ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/cql_transformer_bucket/CQL/models/model_115000.ckpt')
-        if env_name.find('Chair') >= 0:
-            ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/cql_transformer_chair/CQL/models/model_115000.ckpt')
-        if env_name.find('Door') >= 0:
-            ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/cql_transformer_door/CQL/models/model_90000.ckpt')
-        if env_name.find('Drawer') >= 0:
-            ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/cql_transformer_drawer/CQL/models/model_90000.ckpt')
-        # load_checkpoint(self.agent,
-        #     str(pathlib.Path('./example_mani_skill_data/OpenCabinetDrawer_1045_link_0-v0_PN_Transformer.ckpt').resolve()),
-        #     map_location='cpu'
-        # )
         load_checkpoint(self.agent,
-            str(pathlib.Path(ckpt_path).resolve()),
+            str(pathlib.Path('./example_mani_skill_data/OpenCabinetDrawer_1045_link_0-v0_PN_Transformer.ckpt').resolve()),
             map_location='cpu'
         )
         self.agent.to('cuda')  # dataparallel not done here
