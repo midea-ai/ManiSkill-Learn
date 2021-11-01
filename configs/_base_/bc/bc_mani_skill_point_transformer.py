@@ -4,7 +4,7 @@ num_heads = 4
 
 agent = dict(
     type='BC',
-    batch_size=128,
+    batch_size=32, #128,
     policy_cfg=dict(
         type='ContinuousPolicy',
         policy_head_cfg=dict(
@@ -19,7 +19,7 @@ agent = dict(
                 type='PointTransformerBackbone',
                 nneighbor=16,
                 nblocks=4,
-                transformer_dim=256,
+                transformer_dim=128,
                 num_point=1200,
                 input_dim='agent_shape + pcd_xyz_rgb_channel',
                 fc1_dim=32,
