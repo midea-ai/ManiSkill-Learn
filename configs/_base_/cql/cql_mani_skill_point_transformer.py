@@ -81,7 +81,7 @@ agent = dict(
             state_mlp_cfg=dict(
                 type='LinearMLP',
                 norm_cfg=None,
-                mlp_spec=['agent_shape + action_shape', 192, 192],
+                mlp_spec=['agent_shape + action_shape', 512, 4*512],
                 bias='auto',
                 inactivated_output=True,
                 linear_init_cfg=dict(type='xavier_init', gain=1, bias=0),
@@ -89,7 +89,7 @@ agent = dict(
             final_mlp_cfg=dict(
                 type='LinearMLP',
                 norm_cfg=None,
-                mlp_spec=[192, 128, 1],
+                mlp_spec=['4 * 512 * (num_objs + 3)', 512, 1],
                 bias='auto',
                 inactivated_output=True,
                 linear_init_cfg=dict(type='xavier_init', gain=1, bias=0),
