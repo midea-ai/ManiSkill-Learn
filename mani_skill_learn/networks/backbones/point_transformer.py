@@ -213,9 +213,26 @@ class PointTransformerSegV0(nn.Module):
             
         return self.fc3(points)
 
+class PointBackbone(nn.Module):
+    def __init__(self):
+        super(PointBackbone, self).__init__()
+
+    def forward(self, pcd):
+        pcd = pcd.copy()
+        if isinstance(pcd, dict):
+            if 'pointcloud' in pcd:
+                pcd['pcd'] = pcd['pointcloud']
+                del pcd['pointcloud']
+            assert 'pcd' in pcd
+            return self.forward_raw(**pcd)
+        else:
+            return self.forward_raw(pcd)
+
+    def forward_raw(self, pcd, state=None):
+        raise NotImplementedError("")
 
 @BACKBONES.register_module()
-class PointTransformerManiV0(nn.Module):
+class PointTransformerManiV0(PointBackbone):
     def __init__(self, pcd_pn_cfg, state_mlp_cfg, final_mlp_cfg, stack_frame, num_objs, transformer_cfg=None):
         """
         Point Transformer with instance segmentation masks.
