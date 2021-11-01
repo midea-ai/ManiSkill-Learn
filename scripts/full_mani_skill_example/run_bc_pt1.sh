@@ -12,7 +12,7 @@ model_list=$(python -c "import mani_skill, os, os.path as osp; print(osp.abspath
 # 	"train_mfrl_cfg.init_replay_with_split=[\"./full_mani_skill_data/OpenCabinetDrawer/\",\"$model_list\"]" \
 # 	"env_cfg.env_name=OpenCabinetDrawer-v0" "eval_cfg.num=300" "eval_cfg.num_procs=1" "train_mfrl_cfg.n_eval=150000"
 
-python -m tools.run_rl configs/bc/mani_skill_point_cloud_transformer.py --gpu-ids=3 \
+python -m tools.run_rl configs/bc/mani_skill_point_transformer.py --gpu-ids=3 \
 	--work-dir=./work_dirs/bc_point_transformer_drawer/ \
 	--cfg-options "train_mfrl_cfg.total_steps=1000" \
 	"env_cfg.env_name=OpenCabinetDrawer-v0" "eval_cfg.num=300" "eval_cfg.num_procs=1" "train_mfrl_cfg.n_eval=100"
