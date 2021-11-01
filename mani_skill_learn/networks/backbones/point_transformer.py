@@ -144,7 +144,8 @@ class PointTransformerBackbone(nn.Module):
         xyz = x[..., :3]
         # mask = torch.ones_like(pcd['xyz'][..., :1]) if mask is None else mask[..., None]  # [B, N, 1]
         # mask = mask[..., None]
-        masked_x = masked_max(x, 1, mask=mask)  # [B, K, CF]
+        # masked_x = masked_max(x, 1, mask=mask)  # [B, K, CF]
+        masked_x = mask * x
 
         points = self.transformer1(xyz, self.fc1(masked_x))[0]
         print('###### PointTransformerBackbone Called #######')
