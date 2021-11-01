@@ -107,9 +107,11 @@ class PointTransformerBackbone(nn.Module):
         self.transition_downs = nn.ModuleList()
         self.transformers = nn.ModuleList()
         input_channel = fc1_dim + 3
+        # 1200 -> 300 -> 8
+        num_point_list = [300, 8]
         for i in range(nblocks):
-            channel = fc1_dim * 2 ** (i // 2 + 1)
-            self.transition_downs.append(TransitionDown(num_point // 4 ** (i + 1), nneighbor, [input_channel, channel, channel]))
+            channel = fc1_dim * 2 ** (i + 1)
+            self.transition_downs.append(TransitionDown(num_point_list[i], nneighbor, [input_channel, channel, channel]))
             self.transformers.append(TransformerBlock(channel, transformer_dim, nneighbor))
             input_channel = channel + 3
         self.nblocks = nblocks
