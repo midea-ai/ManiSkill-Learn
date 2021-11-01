@@ -150,8 +150,13 @@ class PointTransformerBackbone(nn.Module):
 
         xyz_and_feats = [(xyz, points)]
         for i in range(self.nblocks):
+            print("#############################")
+            print('i=%s' % (str(i)))
             xyz, points = self.transition_downs[i](xyz, points)
+            print('xyz=%s' % (str(xyz.shape)))
+            print('points=%s' % (str(points.shape)))
             points = self.transformers[i](xyz, points)[0]
+            print('points=%s' % (str(points.shape)))
             xyz_and_feats.append((xyz, points))
         return points, xyz_and_feats
 
