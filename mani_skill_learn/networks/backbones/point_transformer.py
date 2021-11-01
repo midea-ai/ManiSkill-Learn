@@ -256,6 +256,8 @@ class PointTransformerManiV0(PointBackbone):
         There is one MLP that processes the agent state, and (num_obj + 2) PointNets that process background points
         (where all masks = 0), points from some objects (where some mask = 1), and the entire point cloud, respectively.
 
+        only 3 networks (backgound, foreground, all)
+
         For points of the same object, the same PointNet processes each frame and concatenates the
         representations from all frames to form the representation of that point type.
 
@@ -270,7 +272,8 @@ class PointTransformerManiV0(PointBackbone):
         """
         super(PointTransformerManiV0, self).__init__()
 
-        self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(num_objs + 2)])
+        # self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(num_objs + 2)])
+        self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(3)])
         # # None
         # self.attn = build_backbone(transformer_cfg) if transformer_cfg is not None else None
         self.state_mlp = build_backbone(state_mlp_cfg)
@@ -301,8 +304,9 @@ class PointTransformerManiV0(PointBackbone):
         print('seg:', seg.shape)
 
         obj_masks = [1. - (torch.sum(seg, dim=-1) > 0.5).type(xyz.dtype)]  # [B, N], the background mask
-        for i in range(self.num_objs):
-            obj_masks.append(seg[..., i])
+        obj_masks = [1. - (torch.sum(seg, dim=-1) < 0.5).type(xyz.dtype)]  # [B, N], the foreground mask
+        # for i in range(self.num_objs):
+        #     obj_masks.append(seg[..., i])
         obj_masks.append(torch.ones_like(seg[..., 0])) # the entire point cloud
 
         obj_features = [] 
