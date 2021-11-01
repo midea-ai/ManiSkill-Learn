@@ -95,22 +95,23 @@ class TransitionUp(nn.Module):
         
 @BACKBONES.register_module()
 class PointTransformerBackbone(nn.Module):
-    def __init__(self, num_point, nblocks, nneighbor, transformer_dim, input_dim):
+    def __init__(self, num_point, nblocks, nneighbor, transformer_dim, input_dim, fc1_dim):
         super(PointTransformerBackbone, self).__init__()
 
         self.fc1 = nn.Sequential(
-            nn.Linear(input_dim, 32),
+            nn.Linear(input_dim, fc1_dim),
             nn.ReLU(),
-            nn.Linear(32, 32)
+            nn.Linear(fc1_dim, fc1_dim)
         )
-        self.transformer1 = TransformerBlock(32, transformer_dim, nneighbor)
+        self.transformer1 = TransformerBlock(fc1_dim, transformer_dim, nneighbor)
         self.transition_downs = nn.ModuleList()
         self.transformers = nn.ModuleList()
+        input_channel = fc1_dim + 3
         for i in range(nblocks):
-            # channel = 32 * 2 ** (i + 1)
-            channel = 16 * 2 ** (i + 1)
-            self.transition_downs.append(TransitionDown(num_point // 4 ** (i + 1), nneighbor, [channel + 3, channel, channel]))
+            channel = fc1_dim * 2 ** (i // 2 + 1)
+            self.transition_downs.append(TransitionDown(num_point // 4 ** (i + 1), nneighbor, [input_channel, channel, channel]))
             self.transformers.append(TransformerBlock(channel, transformer_dim, nneighbor))
+            input_channel = channel + 3
         self.nblocks = nblocks
         
     # def __init__(self, cfg):

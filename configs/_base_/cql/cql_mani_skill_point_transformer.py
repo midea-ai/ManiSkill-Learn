@@ -43,6 +43,7 @@ agent = dict(
                 transformer_dim=256,
                 num_point=1200,
                 input_dim='agent_shape + pcd_xyz_rgb_channel',
+                fc1_dim=32,
             ),
             state_mlp_cfg=dict(
                 type='LinearMLP',
@@ -77,6 +78,7 @@ agent = dict(
                 transformer_dim=256,
                 num_point=1200,
                 input_dim='agent_shape + pcd_xyz_rgb_channel + action_shape',
+                fc1_dim=32,
             ),
             state_mlp_cfg=dict(
                 type='LinearMLP',
