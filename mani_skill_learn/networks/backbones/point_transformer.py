@@ -143,6 +143,7 @@ class PointTransformerBackbone(nn.Module):
     def forward(self, x, mask=None):
         xyz = x[..., :3]
         # mask = torch.ones_like(pcd['xyz'][..., :1]) if mask is None else mask[..., None]  # [B, N, 1]
+        # mask = mask[..., None]
         masked_x = masked_max(x, 1, mask=mask)  # [B, K, CF]
 
         points = self.transformer1(xyz, self.fc1(masked_x))[0]
@@ -305,7 +306,9 @@ class PointTransformerManiV0(PointBackbone):
         obj_features.append(self.state_mlp(state))
         for i in range(len(obj_masks)):
             obj_mask = obj_masks[i]
-            print('current i=%d, obj_mask=%s' % (i, str(obj_mask.shape)))
+            obj_mask = obj_mask[..., None]
+            print('current i=%d' % (i))
+            print('obj_mask=%s' % (str(obj_mask.shape)))
             cur_input = torch.cat((xyz, rgb), dim=-1)
             print('cur_input=%s' % (str(cur_input.shape)))
             cur_input = torch.cat([cur_input, state[:, None].repeat(1, N, 1)], dim=-1)  # [B, N, xyz+rgb+robot_state]
