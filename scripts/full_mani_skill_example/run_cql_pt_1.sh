@@ -14,6 +14,6 @@ model_list=$(python -c "import mani_skill, os, os.path as osp; print(osp.abspath
 
 python -m tools.run_rl configs/cql/mani_skill_point_transformer.py --gpu-ids=3 \
 	--work-dir=./work_dirs/cql_point_transformer_drawer/ \
-	--cfg-options "train_mfrl_cfg.total_steps=1000" "train_mfrl_cfg.init_replay_buffers=" \
+	--cfg-options "train_mfrl_cfg.total_steps=1000" \
 	"env_cfg.env_name=OpenCabinetDrawer-v0" "eval_cfg.num=100" "eval_cfg.num_procs=1" "train_mfrl_cfg.n_eval=100"
 
