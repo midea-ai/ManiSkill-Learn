@@ -55,7 +55,7 @@ agent = dict(
             final_mlp_cfg=dict(
                 type='LinearMLP',
                 norm_cfg=None,
-                mlp_spec=[4*512, 512, 'action_shape * 2'],
+                mlp_spec=['4 * 512 * (num_objs + 3)', 512, 'action_shape * 2'],
                 bias='auto',
                 inactivated_output=True,
                 linear_init_cfg=dict(type='xavier_init', gain=1, bias=0),
