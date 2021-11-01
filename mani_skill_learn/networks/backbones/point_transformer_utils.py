@@ -202,6 +202,7 @@ class PointNetSetAbstraction(nn.Module):
         new_points = torch.max(new_points, 2)[0].transpose(1, 2)
         print('new_xyz=%s' % (str(new_xyz.shape)))
         print('new_points=%s' % (str(new_points.shape)))
+        print('###### PointNetSetAbstraction Ended #######')
         return new_xyz, new_points
 
 

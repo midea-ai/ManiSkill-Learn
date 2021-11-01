@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import numpy as np
 
 from mani_skill_learn.utils.meta import Registry, build_from_cfg
+from mani_skill_learn.utils.torch import masked_average, masked_max
 
 # ATTENTION_LAYERS = Registry('attention layer')
 
@@ -142,7 +143,9 @@ class PointTransformerBackbone(nn.Module):
     def forward(self, x, mask=None):
         xyz = x[..., :3]
         # mask = torch.ones_like(pcd['xyz'][..., :1]) if mask is None else mask[..., None]  # [B, N, 1]
-        points = self.transformer1(xyz, self.fc1(x))[0]
+        masked_x = masked_max(x, 1, mask=mask)  # [B, K, CF]
+
+        points = self.transformer1(xyz, self.fc1(masked_x))[0]
         print('###### PointTransformerBackbone Called #######')
         print('x=%s' % (str(x.shape)))
         print('xyz=%s' % (str(xyz.shape)))
@@ -158,6 +161,7 @@ class PointTransformerBackbone(nn.Module):
             points = self.transformers[i](xyz, points)[0]
             print('points=%s' % (str(points.shape)))
             xyz_and_feats.append((xyz, points))
+        print('###### PointTransformerBackbone Ended #######')
         return points, xyz_and_feats
 
 @BACKBONES.register_module()
@@ -306,9 +310,10 @@ class PointTransformerManiV0(PointBackbone):
             print('cur_input=%s' % (str(cur_input.shape)))
             cur_input = torch.cat([cur_input, state[:, None].repeat(1, N, 1)], dim=-1)  # [B, N, xyz+rgb+robot_state]
             print('cur_input=%s' % (str(cur_input.shape)))
+            # cur_input[32 1200 44 for drawer] obj_mask [32 1200]
             points_ft, xyz_and_feats = self.pcd_pns[i](cur_input, obj_mask)
             print('points_ft=%s' % (str(points_ft.shape)))
-            print('xyz_and_feats=%s' % (str(xyz_and_feats.shape)))
+            # print('xyz_and_feats=%s' % (str(xyz_and_feats.shape)))
             # xyz = xyz_and_feats[-1][0]
             obj_features.append(points_ft)
             
