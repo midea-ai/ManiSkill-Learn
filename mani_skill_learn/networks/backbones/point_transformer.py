@@ -155,22 +155,22 @@ class PointTransformerBackbone(nn.Module):
         masked_x = mask * x
 
         points = self.transformer1(xyz, self.fc1(masked_x))[0]
-        print('###### PointTransformerBackbone Called #######')
-        print('x=%s' % (str(x.shape)))
-        print('xyz=%s' % (str(xyz.shape)))
-        print('points=%s' % (str(points.shape)))
+        # print('###### PointTransformerBackbone Called #######')
+        # print('x=%s' % (str(x.shape)))
+        # print('xyz=%s' % (str(xyz.shape)))
+        # print('points=%s' % (str(points.shape)))
 
         xyz_and_feats = [(xyz, points)]
         for i in range(self.nblocks):
-            print("#############################")
-            print('i=%s' % (str(i)))
+            # print("#############################")
+            # print('i=%s' % (str(i)))
             xyz, points = self.transition_downs[i](xyz, points)
-            print('xyz=%s' % (str(xyz.shape)))
-            print('points=%s' % (str(points.shape)))
+            # print('xyz=%s' % (str(xyz.shape)))
+            # print('points=%s' % (str(points.shape)))
             points = self.transformers[i](xyz, points)[0]
-            print('points=%s' % (str(points.shape)))
+            # print('points=%s' % (str(points.shape)))
             xyz_and_feats.append((xyz, points))
-        print('###### PointTransformerBackbone Ended #######')
+        # print('###### PointTransformerBackbone Ended #######')
         return points, xyz_and_feats
 
 @BACKBONES.register_module()
@@ -285,6 +285,8 @@ class PointTransformerManiV0(PointBackbone):
         self.state_mlp = build_backbone(state_mlp_cfg)
         self.global_mlp = build_backbone(final_mlp_cfg)
 
+        print('PointTransformerManiV0 Inited Successfully!')
+
         self.stack_frame = stack_frame
         self.num_objs = num_objs
         assert self.num_objs > 0
@@ -305,9 +307,9 @@ class PointTransformerManiV0(PointBackbone):
         rgb = pcd['rgb']  # [B, N, 3]
         B, N = rgb.shape[:2]
 
-        print('xyz:', xyz.shape)
-        print('rgb:', rgb.shape)
-        print('seg:', seg.shape)
+        # print('xyz:', xyz.shape)
+        # print('rgb:', rgb.shape)
+        # print('seg:', seg.shape)
 
         # obj_masks = [1. - (torch.sum(seg, dim=-1) > 0.5).type(xyz.dtype)]  # [B, N], the background mask
         # obj_masks = [1. - (torch.sum(seg, dim=-1) < 0.5).type(xyz.dtype)]  # [B, N], the foreground mask
@@ -321,16 +323,16 @@ class PointTransformerManiV0(PointBackbone):
         for i in range(len(obj_masks)):
             obj_mask = obj_masks[i]
             obj_mask = obj_mask[..., None]
-            print('current i=%d' % (i))
-            print('obj_mask=%s' % (str(obj_mask.shape)))
+            # print('current i=%d' % (i))
+            # print('obj_mask=%s' % (str(obj_mask.shape)))
             cur_input = torch.cat((xyz, rgb), dim=-1)
-            print('cur_input=%s' % (str(cur_input.shape)))
+            # print('cur_input=%s' % (str(cur_input.shape)))
             cur_input = torch.cat([cur_input, state[:, None].repeat(1, N, 1)], dim=-1)  # [B, N, xyz+rgb+robot_state]
-            print('cur_input=%s' % (str(cur_input.shape)))
+            # print('cur_input=%s' % (str(cur_input.shape)))
             # cur_input[32 1200 44 for drawer] obj_mask [32 1200]
             points_ft, xyz_and_feats = self.pcd_pns[i](cur_input, obj_mask)
             # points_ft [32 4 512]
-            print('points_ft=%s' % (str(points_ft.shape)))
+            # print('points_ft=%s' % (str(points_ft.shape)))
             # print('xyz_and_feats=%s' % (str(xyz_and_feats.shape)))
             # xyz = xyz_and_feats[-1][0]
             points_ft = points_ft.view(points_ft.shape[0], -1)
@@ -348,9 +350,9 @@ class PointTransformerManiV0(PointBackbone):
         # else:
         #     global_feature = torch.cat(obj_features, dim=-1)  # [B, (NO + 3) * F]
         global_feature = torch.cat(obj_features, dim=-1)  # [B, (NO + 3) * F]
-        print('global_feature=%s' % (str(global_feature.shape)))
+        # print('global_feature=%s' % (str(global_feature.shape)))
         # print('Y', global_feature.shape)
         x = self.global_mlp(global_feature)
-        print('x=%s' % (str(x.shape)))
+        # print('x=%s' % (str(x.shape)))
         # print(x)
         return x

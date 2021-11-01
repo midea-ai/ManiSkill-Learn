@@ -4,7 +4,7 @@ num_heads = 4
 
 agent = dict(
     type='BC',
-    batch_size=32, #128,
+    batch_size=64, #128,
     policy_cfg=dict(
         type='ContinuousPolicy',
         policy_head_cfg=dict(
