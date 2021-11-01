@@ -1,8 +1,56 @@
 import torch
 import torch.nn as nn
-from pointnet_util import PointNetFeaturePropagation, PointNetSetAbstraction
-from .transformer import TransformerBlock
 
+from mani_skill_learn.utils.data import dict_to_seq
+from mani_skill_learn.utils.torch import masked_average, masked_max
+from ..builder import BACKBONES, build_backbone
+
+from .point_transformer_utils import index_points, square_distance, PointNetSetAbstraction
+import torch.nn.functional as F
+import numpy as np
+
+from mani_skill_learn.utils.meta import Registry, build_from_cfg
+
+# ATTENTION_LAYERS = Registry('attention layer')
+
+class TransformerBlock(nn.Module):
+    def __init__(self, d_points, d_model, k) -> None:
+        super().__init__()
+        self.fc1 = nn.Linear(d_points, d_model)
+        self.fc2 = nn.Linear(d_model, d_points)
+        self.fc_delta = nn.Sequential(
+            nn.Linear(3, d_model),
+            nn.ReLU(),
+            nn.Linear(d_model, d_model)
+        )
+        self.fc_gamma = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.ReLU(),
+            nn.Linear(d_model, d_model)
+        )
+        self.w_qs = nn.Linear(d_model, d_model, bias=False)
+        self.w_ks = nn.Linear(d_model, d_model, bias=False)
+        self.w_vs = nn.Linear(d_model, d_model, bias=False)
+        self.k = k
+        
+    # xyz: b x n x 3, features: b x n x f
+    def forward(self, xyz, features):
+        dists = square_distance(xyz, xyz)
+        knn_idx = dists.argsort()[:, :, :self.k]  # b x n x k
+        knn_xyz = index_points(xyz, knn_idx)
+        
+        pre = features
+        x = self.fc1(features)
+        q, k, v = self.w_qs(x), index_points(self.w_ks(x), knn_idx), index_points(self.w_vs(x), knn_idx)
+
+        pos_enc = self.fc_delta(xyz[:, :, None] - knn_xyz)  # b x n x k x f
+        
+        attn = self.fc_gamma(q[:, :, None] - k + pos_enc)
+        attn = F.softmax(attn / np.sqrt(k.size(-1)), dim=-2)  # b x n x k x f
+        
+        res = torch.einsum('bmnf,bmnf->bmf', attn, v + pos_enc)
+        res = self.fc2(res) + pre
+        return res, attn
 
 class TransitionDown(nn.Module):
     def __init__(self, k, nneighbor, channels):
@@ -11,7 +59,6 @@ class TransitionDown(nn.Module):
         
     def forward(self, xyz, points):
         return self.sa(xyz, points)
-
 
 class TransitionUp(nn.Module):
     def __init__(self, dim1, dim2, dim_out):
@@ -45,27 +92,56 @@ class TransitionUp(nn.Module):
         feats1 = self.fp(xyz2.transpose(1, 2), xyz1.transpose(1, 2), None, feats1.transpose(1, 2)).transpose(1, 2)
         return feats1 + feats2
         
+@BACKBONES.register_module()
+class PointTransformerBackbone(nn.Module):
+    def __init__(self, num_point, nblocks, nneighbor, transformer_dim, input_dim):
+        super(PointTransformerBackbone, self).__init__()
 
-class Backbone(nn.Module):
-    def __init__(self, cfg):
-        super().__init__()
-        npoints, nblocks, nneighbor, n_c, d_points = cfg.num_point, cfg.model.nblocks, cfg.model.nneighbor, cfg.num_class, cfg.input_dim
         self.fc1 = nn.Sequential(
-            nn.Linear(d_points, 32),
+            nn.Linear(input_dim, 192),
             nn.ReLU(),
-            nn.Linear(32, 32)
+            nn.Linear(192, 192)
         )
-        self.transformer1 = TransformerBlock(32, cfg.model.transformer_dim, nneighbor)
+        self.transformer1 = TransformerBlock(192, transformer_dim, nneighbor)
         self.transition_downs = nn.ModuleList()
         self.transformers = nn.ModuleList()
         for i in range(nblocks):
             channel = 32 * 2 ** (i + 1)
-            self.transition_downs.append(TransitionDown(npoints // 4 ** (i + 1), nneighbor, [channel // 2 + 3, channel, channel]))
-            self.transformers.append(TransformerBlock(channel, cfg.model.transformer_dim, nneighbor))
+            self.transition_downs.append(TransitionDown(num_point // 4 ** (i + 1), nneighbor, [channel // 2 + 3, channel, channel]))
+            self.transformers.append(TransformerBlock(channel, transformer_dim, nneighbor))
         self.nblocks = nblocks
+        
+    # def __init__(self, cfg):
+    #     super().__init__()
+    #     npoints, nblocks, nneighbor, n_c, d_points = cfg.num_point, cfg.model.nblocks, cfg.model.nneighbor, cfg.num_class, cfg.input_dim
+    #     self.fc1 = nn.Sequential(
+    #         nn.Linear(d_points, 32),
+    #         nn.ReLU(),
+    #         nn.Linear(32, 32)
+    #     )
+    #     self.transformer1 = TransformerBlock(32, cfg.model.transformer_dim, nneighbor)
+    #     self.transition_downs = nn.ModuleList()
+    #     self.transformers = nn.ModuleList()
+    #     for i in range(nblocks):
+    #         channel = 32 * 2 ** (i + 1)
+    #         self.transition_downs.append(TransitionDown(npoints // 4 ** (i + 1), nneighbor, [channel // 2 + 3, channel, channel]))
+    #         self.transformers.append(TransformerBlock(channel, cfg.model.transformer_dim, nneighbor))
+    #     self.nblocks = nblocks
     
-    def forward(self, x):
+    # def forward(self, x):
+    #     xyz = x[..., :3]
+    #     points = self.transformer1(xyz, self.fc1(x))[0]
+
+    #     xyz_and_feats = [(xyz, points)]
+    #     for i in range(self.nblocks):
+    #         xyz, points = self.transition_downs[i](xyz, points)
+    #         points = self.transformers[i](xyz, points)[0]
+    #         xyz_and_feats.append((xyz, points))
+    #     return points, xyz_and_feats
+    
+    def forward(self, x, mask=None):
         xyz = x[..., :3]
+        # mask = torch.ones_like(pcd['xyz'][..., :1]) if mask is None else mask[..., None]  # [B, N, 1]
         points = self.transformer1(xyz, self.fc1(x))[0]
 
         xyz_and_feats = [(xyz, points)]
@@ -75,8 +151,8 @@ class Backbone(nn.Module):
             xyz_and_feats.append((xyz, points))
         return points, xyz_and_feats
 
-
-class PointTransformerCls(nn.Module):
+@BACKBONES.register_module()
+class PointTransformerClsV0(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         self.backbone = Backbone(cfg)
@@ -95,8 +171,8 @@ class PointTransformerCls(nn.Module):
         res = self.fc2(points.mean(1))
         return res
 
-
-class PointTransformerSeg(nn.Module):
+@BACKBONES.register_module()
+class PointTransformerSegV0(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         self.backbone = Backbone(cfg)
@@ -138,4 +214,93 @@ class PointTransformerSeg(nn.Module):
         return self.fc3(points)
 
 
+@BACKBONES.register_module()
+class PointTransformerManiV0(nn.Module):
+    def __init__(self, pcd_pn_cfg, state_mlp_cfg, final_mlp_cfg, stack_frame, num_objs, transformer_cfg=None):
+        """
+        Point Transformer with instance segmentation masks.
+        There is one MLP that processes the agent state, and (num_obj + 2) PointNets that process background points
+        (where all masks = 0), points from some objects (where some mask = 1), and the entire point cloud, respectively.
+
+        For points of the same object, the same PointNet processes each frame and concatenates the
+        representations from all frames to form the representation of that point type.
+
+        Finally representations from the state and all types of points are passed through final attention
+        to output a vector of representation.
+
+        :param pcd_pn_cfg: configuration for building point feature extractor
+        :param state_mlp_cfg: configuration for building the MLP that processes the agent state vector
+        :param stack_frame: num of the frame in the input
+        :param num_objs: dimension of the segmentation mask
+        :param transformer_cfg: if use transformer to aggregate the features from different objects
+        """
+        super(PointTransformerManiV0, self).__init__()
+
+        self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(num_objs + 2)])
+        # # None
+        # self.attn = build_backbone(transformer_cfg) if transformer_cfg is not None else None
+        self.state_mlp = build_backbone(state_mlp_cfg)
+        self.global_mlp = build_backbone(final_mlp_cfg)
+
+        self.stack_frame = stack_frame
+        self.num_objs = num_objs
+        assert self.num_objs > 0
     
+    def forward_raw(self, pcd, state):
+        """
+        :param pcd: point cloud
+                xyz: shape (l, n_points, 3)
+                rgb: shape (l, n_points, 3)
+                seg:  shape (l, n_points, n_seg)
+        :param state: shape (l, state_shape) state and other information of robot
+        :return: [B,F] [batch size, final output]
+        """
+        assert isinstance(pcd, dict) and 'xyz' in pcd and 'seg' in pcd
+        pcd = pcd.copy()
+        seg = pcd.pop('seg')  # [B, N, NO]
+        xyz = pcd['xyz']  # [B, N, 3]
+        rgb = pcd['rgb']  # [B, N, 3]
+        B, N = rgb.shape[:2]
+
+        print('xyz:', xyz.shape)
+        print('rgb:', rgb.shape)
+        print('seg:', seg.shape)
+
+        obj_masks = [1. - (torch.sum(seg, dim=-1) > 0.5).type(xyz.dtype)]  # [B, N], the background mask
+        for i in range(self.num_objs):
+            obj_masks.append(seg[..., i])
+        obj_masks.append(torch.ones_like(seg[..., 0])) # the entire point cloud
+
+        obj_features = [] 
+        obj_features.append(self.state_mlp(state))
+        for i in range(len(obj_masks)):
+            obj_mask = obj_masks[i]
+            print('current i=%d, obj_mask=%s' % (i, str(obj_mask.shape)))
+            cur_input = torch.cat((xyz, rgb), dim=-1)
+            print('cur_input=%s' % (str(cur_input.shape)))
+            cur_input = torch.cat([cur_input, state[:, None].repeat(1, N, 1)], dim=-1)  # [B, N, xyz+rgb+robot_state]
+            print('cur_input=%s' % (str(cur_input.shape)))
+            points_ft, xyz_and_feats = self.pcd_pns[i](cur_input, obj_mask)
+            print('points_ft=%s' % (str(points_ft.shape)))
+            print('xyz_and_feats=%s' % (str(xyz_and_feats.shape)))
+            # xyz = xyz_and_feats[-1][0]
+            obj_features.append(points_ft)
+            
+            # obj_features.append(self.pcd_pns[i].forward_raw(pcd, state, obj_mask))  # [B, F]
+            # print('X', obj_features[-1].shape)
+        # if self.attn is not None:
+        #     obj_features = torch.stack(obj_features, dim=-2)  # [B, NO + 3, F]
+        #     new_seg = torch.stack(obj_masks, dim=-1)  # [B, N, NO + 2]
+        #     non_empty = (new_seg > 0.5).any(1).float()  # [B, NO + 2]
+        #     non_empty = torch.cat([torch.ones_like(non_empty[:,:1]), non_empty], dim=-1) # [B, NO + 3]
+        #     obj_attn_mask = non_empty[..., None] * non_empty[:, None]  # [B, NO + 3, NO + 3]           
+        #     global_feature = self.attn(obj_features, obj_attn_mask)  # [B, F]
+        # else:
+        #     global_feature = torch.cat(obj_features, dim=-1)  # [B, (NO + 3) * F]
+        global_feature = torch.cat(obj_features, dim=-1)  # [B, (NO + 3) * F]
+        print('global_feature=%s' % (str(global_feature.shape)))
+        # print('Y', global_feature.shape)
+        x = self.global_mlp(global_feature)
+        print('x=%s' % (str(x.shape)))
+        # print(x)
+        return x
