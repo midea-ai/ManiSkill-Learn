@@ -4,7 +4,7 @@ num_heads = 4
 
 agent = dict(
     type='BC',
-    batch_size=32, #128,
+    batch_size=128,
     policy_cfg=dict(
         type='ContinuousPolicy',
         policy_head_cfg=dict(
@@ -19,15 +19,15 @@ agent = dict(
                 type='PointTransformerBackbone',
                 nneighbor=8,
                 nblocks=2,
-                transformer_dim=32,
+                transformer_dim=64,
                 num_point=1200,
                 input_dim='agent_shape + pcd_xyz_rgb_channel',
-                fc1_dim=16,
+                fc1_dim=32,
             ),
             state_mlp_cfg=dict(
                 type='LinearMLP',
                 norm_cfg=None,
-                mlp_spec=['agent_shape', 128, 4 * 64],
+                mlp_spec=['agent_shape', 128, 4 * 128],
                 bias='auto',
                 inactivated_output=True,
                 linear_init_cfg=dict(type='xavier_init', gain=1, bias=0),
@@ -36,7 +36,7 @@ agent = dict(
                 type='LinearMLP',
                 norm_cfg=None,
                 # mlp_spec=['4 * 128 * (num_objs + 3)', 128, 'action_shape * 2'],
-                mlp_spec=[4 * 64 * 2, 128, 'action_shape * 2'],
+                mlp_spec=[4 * 128 * 2, 128, 'action_shape * 2'],
                 bias='auto',
                 inactivated_output=True,
                 linear_init_cfg=dict(type='xavier_init', gain=1, bias=0),
