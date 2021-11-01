@@ -5,7 +5,7 @@ num_heads = 4
 
 agent = dict(
     type='CQL',
-    batch_size=32,
+    batch_size=16,
     gamma=0.95,
 
     update_coeff=0.005,
