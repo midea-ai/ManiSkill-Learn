@@ -316,9 +316,11 @@ class PointTransformerManiV0(PointBackbone):
             print('cur_input=%s' % (str(cur_input.shape)))
             # cur_input[32 1200 44 for drawer] obj_mask [32 1200]
             points_ft, xyz_and_feats = self.pcd_pns[i](cur_input, obj_mask)
+            # points_ft [32 4 512]
             print('points_ft=%s' % (str(points_ft.shape)))
             # print('xyz_and_feats=%s' % (str(xyz_and_feats.shape)))
             # xyz = xyz_and_feats[-1][0]
+            points_ft = points_ft.view(points_ft.shape[0], -1)
             obj_features.append(points_ft)
             
             # obj_features.append(self.pcd_pns[i].forward_raw(pcd, state, obj_mask))  # [B, F]
