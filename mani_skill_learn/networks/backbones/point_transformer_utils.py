@@ -180,18 +180,28 @@ class PointNetSetAbstraction(nn.Module):
             new_xyz: sampled points position data, [B, S, C]
             new_points_concat: sample points feature data, [B, S, D']
         """
+        print('###### PointNetSetAbstraction Called #######')
+        print('xyz=%s' % (str(xyz.shape)))
+        print('points=%s' % (str(points.shape)))
         if self.group_all:
+            print('Group all')
             new_xyz, new_points = sample_and_group_all(xyz, points)
         else:
             new_xyz, new_points = sample_and_group(self.npoint, self.radius, self.nsample, xyz, points, knn=self.knn)
         # new_xyz: sampled points position data, [B, npoint, C]
         # new_points: sampled points data, [B, npoint, nsample, C+D]
+        print('new_xyz=%s' % (str(new_xyz.shape)))
+        print('new_points=%s' % (str(new_points.shape)))
         new_points = new_points.permute(0, 3, 2, 1) # [B, C+D, nsample,npoint]
+        print('new_points=%s' % (str(new_points.shape)))
         for i, conv in enumerate(self.mlp_convs):
             bn = self.mlp_bns[i]
+            print('i=%d, new_points=%s' % (i, str(new_points.shape)))
             new_points =  F.relu(bn(conv(new_points)))
 
         new_points = torch.max(new_points, 2)[0].transpose(1, 2)
+        print('new_xyz=%s' % (str(new_xyz.shape)))
+        print('new_points=%s' % (str(new_points.shape)))
         return new_xyz, new_points
 
 

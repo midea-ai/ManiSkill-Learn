@@ -98,11 +98,11 @@ class PointTransformerBackbone(nn.Module):
         super(PointTransformerBackbone, self).__init__()
 
         self.fc1 = nn.Sequential(
-            nn.Linear(input_dim, 192),
+            nn.Linear(input_dim, 32),
             nn.ReLU(),
-            nn.Linear(192, 192)
+            nn.Linear(32, 32)
         )
-        self.transformer1 = TransformerBlock(192, transformer_dim, nneighbor)
+        self.transformer1 = TransformerBlock(32, transformer_dim, nneighbor)
         self.transition_downs = nn.ModuleList()
         self.transformers = nn.ModuleList()
         for i in range(nblocks):
@@ -143,6 +143,10 @@ class PointTransformerBackbone(nn.Module):
         xyz = x[..., :3]
         # mask = torch.ones_like(pcd['xyz'][..., :1]) if mask is None else mask[..., None]  # [B, N, 1]
         points = self.transformer1(xyz, self.fc1(x))[0]
+        print('###### PointTransformerBackbone Called #######')
+        print('x=%s' % (str(x.shape)))
+        print('xyz=%s' % (str(xyz.shape)))
+        print('points=%s' % (str(points.shape)))
 
         xyz_and_feats = [(xyz, points)]
         for i in range(self.nblocks):
