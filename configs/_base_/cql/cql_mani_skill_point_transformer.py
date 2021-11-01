@@ -57,7 +57,7 @@ agent = dict(
                 type='LinearMLP',
                 norm_cfg=None,
                 # mlp_spec=['4 * 128 * (num_objs + 3)', 128, 'action_shape * 2'],
-                mlp_spec=[4 * 128, 128, 'action_shape * 2'],
+                mlp_spec=[4 * 128 * 2, 128, 'action_shape * 2'],
                 bias='auto',
                 inactivated_output=True,
                 linear_init_cfg=dict(type='xavier_init', gain=1, bias=0),
@@ -92,7 +92,7 @@ agent = dict(
             final_mlp_cfg=dict(
                 type='LinearMLP',
                 norm_cfg=None,
-                mlp_spec=[4 * 128, 128, 1],
+                mlp_spec=[4 * 128 * 2, 128, 1],
                 bias='auto',
                 inactivated_output=True,
                 linear_init_cfg=dict(type='xavier_init', gain=1, bias=0),
