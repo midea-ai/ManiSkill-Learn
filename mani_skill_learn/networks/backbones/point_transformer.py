@@ -329,7 +329,7 @@ class PointTransformerManiV0(PointBackbone):
             eigen_vector, _ = LA.eigh(tmp_matrix)
             eigen_vector = torch.from_numpy(eigen_vector).float()
             eigen_vector.requires_grad = True
-            print('eigen_vector:', eigen_vector.shape)
+            # print('eigen_vector:', eigen_vector.shape)
             self.eigen_vectors.append(eigen_vector)
 
         assert self.num_objs > 0
