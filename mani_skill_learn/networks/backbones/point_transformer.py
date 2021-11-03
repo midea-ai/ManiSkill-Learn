@@ -409,9 +409,11 @@ class PointTransformerManiV0(PointBackbone):
             print('eigen_vector=%s' % (str(self.eigen_vectors[i].shape)))
             print('tmp=%s' % (str(tmp.shape)))
             random_global_features.append(tmp)
-        
-        random_global_features = torch.stack(random_global_features, dim=-1)
-        global_feature = torch.mean(random_global_features, dim=-1)
+
+        if len(self.eigen_vectors) > 0:
+            random_global_features = torch.stack(random_global_features, dim=-1)
+            global_feature = torch.mean(random_global_features, dim=-1)
+            
         x = self.global_mlp(global_feature)
         # print('x=%s' % (str(x.shape)))
         # print(x)
