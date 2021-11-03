@@ -403,7 +403,9 @@ class PointTransformerManiV0(PointBackbone):
         # print('global_feature=%s' % (str(global_feature.shape)))
         # print('Y', global_feature.shape)
         random_global_features = []
+        cur_device = global_feature.get_device()
         for i in range(len(self.eigen_vectors)):
+            self.eigen_vectors[i] = self.eigen_vectors[i].to(cur_device)
             tmp = global_feature * self.eigen_vectors[i]
             print('#########################')
             print('global_feature=%s' % (str(global_feature.shape)))
