@@ -96,7 +96,7 @@ class TransitionUp(nn.Module):
         
 @BACKBONES.register_module()
 class PointTransformerBackbone(nn.Module):
-    def __init__(self, num_point, nblocks, nneighbor, transformer_dim, input_dim, fc1_dim, subtract_mean_coords):
+    def __init__(self, num_point, nblocks, nneighbor, transformer_dim, input_dim, fc1_dim, num_model, subtract_mean_coords):
         super(PointTransformerBackbone, self).__init__()
 
         # self.max_mean_mix_aggregation = max_mean_mix_aggregation
