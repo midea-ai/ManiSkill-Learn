@@ -165,6 +165,7 @@ class PointTransformerBackbone(nn.Module):
             # Use xyz - mean xyz instead of original xyz
             xyz = pcd['xyz']  # [B, N, 3]
             mean_xyz = masked_average(xyz, 1, mask=mask, keepdim=True)  # [B, 1, 3]
+            print('mean_xyz=%s' % (str(mean_xyz.shape)))
             pcd['mean_xyz'] = mean_xyz.repeat(1, xyz.shape[1], 1)
             pcd['xyz'] = xyz - mean_xyz
         
