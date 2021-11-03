@@ -165,7 +165,7 @@ class PointTransformerBackbone(nn.Module):
             # Use xyz - mean xyz instead of original xyz
             xyz = pcd['xyz']  # [B, N, 3]
             mean_xyz = masked_average(xyz, 1, mask=mask, keepdim=True)  # [B, 1, 3]
-            print('mean_xyz=%s' % (str(mean_xyz.shape)))
+            # print('mean_xyz=%s' % (str(mean_xyz.shape)))
             pcd['mean_xyz'] = mean_xyz.repeat(1, xyz.shape[1], 1)
             pcd['xyz'] = xyz - mean_xyz
         
@@ -175,6 +175,7 @@ class PointTransformerBackbone(nn.Module):
         # Concat all elements like xyz, rgb, seg mask, mean_xyz, state
         state_pcd = torch.cat([pcd, state[:, None].repeat(1, N, 1)], dim=-1)  # [B, N, CS]
         masked_x = mask * state_pcd
+        print('masked_x=%s' % (str(masked_x.shape)))
 
         # mask = torch.ones_like(pcd['xyz'][..., :1]) if mask is None else mask[..., None]  # [B, N, 1]
         # mask = mask[..., None]

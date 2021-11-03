@@ -6,9 +6,9 @@ def masked_average(x, axis, mask=None, keepdim=False):
         return torch.mean(x, dim=axis, keepdim=keepdim)
     else:
         x = torch.sum(x * mask, dim=axis, keepdim=keepdim)
-        print('x=%s' % (str(x.shape)))
+        # print('x=%s' % (str(x.shape)))
         y = (torch.sum(mask, dim=axis, keepdim=keepdim) + 1E-6)
-        print('y=%s' % (str(y.shape)))
+        # print('y=%s' % (str(y.shape)))
         # return torch.sum(x * mask, dim=axis, keepdim=keepdim) / (torch.sum(mask, dim=axis, keepdim=keepdim) + 1E-6)
         return x / y
 
