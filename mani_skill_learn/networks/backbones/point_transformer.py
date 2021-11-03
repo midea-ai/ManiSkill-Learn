@@ -175,7 +175,7 @@ class PointTransformerBackbone(nn.Module):
         # Concat all elements like xyz, rgb, seg mask, mean_xyz, state
         state_pcd = torch.cat([pcd, state[:, None].repeat(1, N, 1)], dim=-1)  # [B, N, CS]
         masked_x = mask * state_pcd
-        print('masked_x=%s' % (str(masked_x.shape)))
+        # print('masked_x=%s' % (str(masked_x.shape)))
 
         # mask = torch.ones_like(pcd['xyz'][..., :1]) if mask is None else mask[..., None]  # [B, N, 1]
         # mask = mask[..., None]
@@ -327,7 +327,8 @@ class PointTransformerManiV0(PointBackbone):
             tmp_matrix = np.triu(tmp_matrix)
             tmp_matrix = tmp_matrix + tmp_matrix.T - np.diag(tmp_matrix.diagonal())
             eigen_vector, _ = LA.eigh(tmp_matrix)
-            eigen_vector = torch.from_numpy(eigen_vector, requires_grad=True)
+            eigen_vector = torch.from_numpy(eigen_vector)
+            eigen_vector.requires_grad = True
             print('eigen_vector:', eigen_vector.shape)
             self.eigen_vectors.append(eigen_vector)
 
@@ -413,7 +414,7 @@ class PointTransformerManiV0(PointBackbone):
         if len(self.eigen_vectors) > 0:
             random_global_features = torch.stack(random_global_features, dim=-1)
             global_feature = torch.mean(random_global_features, dim=-1)
-            
+
         x = self.global_mlp(global_feature)
         # print('x=%s' % (str(x.shape)))
         # print(x)
