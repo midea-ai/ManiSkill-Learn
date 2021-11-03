@@ -360,10 +360,10 @@ class PointTransformerManiV0(PointBackbone):
         # obj_masks.append(torch.ones_like(seg[..., 0])) # the entire point cloud
         if self.num_pcd_pns == 1:
             # obj_masks = [1. - (torch.sum(seg, dim=-1) < 0.5).type(xyz.dtype)]  # [B, N], the foreground mask
-            obj_masks = torch.ones_like(seg[..., 0]) # the entire point cloud
+            obj_masks = [torch.ones_like(seg[..., 0])] # the entire point cloud
         elif self.num_pcd_pns == 2:
             # obj_masks = [1. - (torch.sum(seg, dim=-1) < 0.5).type(xyz.dtype)]  # [B, N], the foreground mask
-            obj_masks = torch.ones_like(seg[..., 0]) # the entire point cloud
+            obj_masks = [torch.ones_like(seg[..., 0])] # the entire point cloud
             obj_masks.append(seg[..., 0]) # handle for drawer and door, robot for chair and bucket
 
         obj_features = [] 
