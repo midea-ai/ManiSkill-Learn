@@ -5,7 +5,13 @@ def masked_average(x, axis, mask=None, keepdim=False):
     if mask is None:
         return torch.mean(x, dim=axis, keepdim=keepdim)
     else:
-        return torch.sum(x * mask, dim=axis, keepdim=keepdim) / (torch.sum(mask, dim=axis, keepdim=keepdim) + 1E-6)
+        x = torch.sum(x * mask, dim=axis, keepdim=keepdim)
+        print('x=%s' % (str(x.shape)))
+        y = (torch.sum(mask, dim=axis, keepdim=keepdim) + 1E-6)
+        print('y=%s' % (str(y.shape)))
+        # return torch.sum(x * mask, dim=axis, keepdim=keepdim) / (torch.sum(mask, dim=axis, keepdim=keepdim) + 1E-6)
+        return x / y
+
 
 
 def masked_max(x, axis, mask=None, keepdim=False, empty_value=0):
