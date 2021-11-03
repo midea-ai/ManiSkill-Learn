@@ -18,13 +18,13 @@ agent = dict(
             num_sym_matrix=0,
             pcd_pn_cfg=dict(
                 type='PointTransformerBackbone',
-                nneighbor=16,
-                nblocks=4,
+                nneighbor=8,
+                nblocks=2,
                 transformer_dim=128,
                 num_point=1200,
                 input_dim='agent_shape + pcd_xyz_rgb_channel + 3',
                 fc1_dim=32,
-                num_model=1,
+                num_model=2,
                 subtract_mean_coords=True,
             ),
             state_mlp_cfg=dict(

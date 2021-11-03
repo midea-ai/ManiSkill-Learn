@@ -1,4 +1,4 @@
-_base_ = ['../_base_/bc/bc_mani_skill_point_transformer.py']
+_base_ = ['../_base_/bc/bc_mani_skill_point_transformer3.py']
 
 
 env_cfg = dict(

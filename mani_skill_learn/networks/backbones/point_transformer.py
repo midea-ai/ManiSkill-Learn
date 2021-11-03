@@ -8,6 +8,7 @@ from ..builder import BACKBONES, build_backbone
 from .point_transformer_utils import index_points, square_distance, PointNetSetAbstraction
 import torch.nn.functional as F
 import numpy as np
+from numpy import linalg as LA
 
 from mani_skill_learn.utils.meta import Registry, build_from_cfg
 from mani_skill_learn.utils.torch import masked_average, masked_max
@@ -95,8 +96,11 @@ class TransitionUp(nn.Module):
         
 @BACKBONES.register_module()
 class PointTransformerBackbone(nn.Module):
-    def __init__(self, num_point, nblocks, nneighbor, transformer_dim, input_dim, fc1_dim):
+    def __init__(self, num_point, nblocks, nneighbor, transformer_dim, input_dim, fc1_dim, subtract_mean_coords):
         super(PointTransformerBackbone, self).__init__()
+
+        # self.max_mean_mix_aggregation = max_mean_mix_aggregation
+        self.subtract_mean_coords = subtract_mean_coords
 
         self.fc1 = nn.Sequential(
             nn.Linear(input_dim, fc1_dim),
@@ -110,10 +114,13 @@ class PointTransformerBackbone(nn.Module):
         # 1200 -> 300 -> 8
         if nblocks == 2:
             num_point_list = [200, 4]
+            channel_list = [64, 128]
         elif nblocks == 4:
             num_point_list = [300, 75, 18, 4]
+            channel_list = [64, 64, 128, 128]
         for i in range(nblocks):
-            channel = fc1_dim * 2 ** (i // 2 + 1)
+            # channel = fc1_dim * 2 ** (i // 2 + 1)
+            channel = channel_list[i]
             self.transition_downs.append(TransitionDown(num_point_list[i], nneighbor, [input_channel, channel, channel]))
             self.transformers.append(TransformerBlock(channel, transformer_dim, nneighbor))
             input_channel = channel + 3
@@ -147,12 +154,31 @@ class PointTransformerBackbone(nn.Module):
     #         xyz_and_feats.append((xyz, points))
     #     return points, xyz_and_feats
     
-    def forward(self, x, mask=None):
-        xyz = x[..., :3]
+    def forward(self, pcd, state, mask=None):
+        if mask is None:
+            mask = torch.ones_like(pcd['xyz'][..., :1])
+        # masked_x = mask * pcd
+        # xyz = pcd[..., :3]
+        pcd = pcd.copy()
+
+        if self.subtract_mean_coords:
+            # Use xyz - mean xyz instead of original xyz
+            xyz = pcd['xyz']  # [B, N, 3]
+            mean_xyz = masked_average(xyz, 1, mask=mask, keepdim=True)  # [B, 1, 3]
+            pcd['mean_xyz'] = mean_xyz.repeat(1, xyz.shape[1], 1)
+            pcd['xyz'] = xyz - mean_xyz
+        
+        # Concat all elements like xyz, rgb, seg mask, mean_xyz
+        pcd = torch.cat(dict_to_seq(pcd)[1], dim=-1)
+        B, N = pcd.shape[:2]
+        # Concat all elements like xyz, rgb, seg mask, mean_xyz, state
+        state_pcd = torch.cat([pcd, state[:, None].repeat(1, N, 1)], dim=-1)  # [B, N, CS]
+        masked_x = mask * state_pcd
+
         # mask = torch.ones_like(pcd['xyz'][..., :1]) if mask is None else mask[..., None]  # [B, N, 1]
         # mask = mask[..., None]
         # masked_x = masked_max(x, 1, mask=mask)  # [B, K, CF]
-        masked_x = mask * x
+        # masked_x = mask * x
 
         points = self.transformer1(xyz, self.fc1(masked_x))[0]
         # print('###### PointTransformerBackbone Called #######')
@@ -255,7 +281,7 @@ class PointBackbone(nn.Module):
 
 @BACKBONES.register_module()
 class PointTransformerManiV0(PointBackbone):
-    def __init__(self, pcd_pn_cfg, state_mlp_cfg, final_mlp_cfg, stack_frame, num_objs, transformer_cfg=None):
+    def __init__(self, pcd_pn_cfg, state_mlp_cfg, final_mlp_cfg, stack_frame, num_objs, num_sym_matrix, transformer_cfg=None):
         """
         Point Transformer with instance segmentation masks.
         There is one MLP that processes the agent state, and (num_obj + 2) PointNets that process background points
@@ -279,7 +305,9 @@ class PointTransformerManiV0(PointBackbone):
 
         # self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(num_objs + 2)])
         # self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(3)])
-        self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(1)])
+        # self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(1)])
+        self.num_pcd_pns = pcd_pn_cfg['num_model']
+        self.pcd_pns = nn.ModuleList([build_backbone(pcd_pn_cfg) for i in range(self.num_pcd_pns)])
         # # None
         # self.attn = build_backbone(transformer_cfg) if transformer_cfg is not None else None
         self.state_mlp = build_backbone(state_mlp_cfg)
@@ -289,6 +317,18 @@ class PointTransformerManiV0(PointBackbone):
 
         self.stack_frame = stack_frame
         self.num_objs = num_objs
+        self.num_sym_matrix = num_sym_matrix
+        self.eigen_vectors = []
+        dim = final_mlp_cfg['mlp_spec'][0]
+        for i in range(self.num_sym_matrix):
+            tmp_matrix = np.random.rand(dim**2).reshape(dim, dim)
+            tmp_matrix = np.triu(tmp_matrix)
+            tmp_matrix = tmp_matrix + tmp_matrix.T - np.diag(tmp_matrix.diagonal())
+            eigen_vector, _ = LA.eigh(tmp_matrix)
+            eigen_vector = torch.from_numpy(eigen_vector, requires_grad=True)
+            print('eigen_vector:', eigen_vector.shape)
+            self.eigen_vectors.append(eigen_vector)
+
         assert self.num_objs > 0
     
     def forward_raw(self, pcd, state):
@@ -302,7 +342,8 @@ class PointTransformerManiV0(PointBackbone):
         """
         assert isinstance(pcd, dict) and 'xyz' in pcd and 'seg' in pcd
         pcd = pcd.copy()
-        seg = pcd.pop('seg')  # [B, N, NO]
+        # seg = pcd.pop('seg')  # [B, N, NO]
+        seg = pcd['seg']  # [B, N, NO]
         xyz = pcd['xyz']  # [B, N, 3]
         rgb = pcd['rgb']  # [B, N, 3]
         B, N = rgb.shape[:2]
@@ -316,21 +357,27 @@ class PointTransformerManiV0(PointBackbone):
         # for i in range(self.num_objs):
         #     obj_masks.append(seg[..., i])
         # obj_masks.append(torch.ones_like(seg[..., 0])) # the entire point cloud
-        obj_masks = [torch.ones_like(seg[..., 0])] # the entire point cloud
+        if self.num_pcd_pns == 1:
+            # obj_masks = [1. - (torch.sum(seg, dim=-1) < 0.5).type(xyz.dtype)]  # [B, N], the foreground mask
+            obj_masks = torch.ones_like(seg[..., 0]) # the entire point cloud
+        elif self.num_pcd_pns == 2:
+            # obj_masks = [1. - (torch.sum(seg, dim=-1) < 0.5).type(xyz.dtype)]  # [B, N], the foreground mask
+            obj_masks = torch.ones_like(seg[..., 0]) # the entire point cloud
+            obj_masks.append(seg[..., 0]) # handle for drawer and door, robot for chair and bucket
 
         obj_features = [] 
         obj_features.append(self.state_mlp(state))
         for i in range(len(obj_masks)):
             obj_mask = obj_masks[i]
-            obj_mask = obj_mask[..., None]
+            obj_mask = obj_mask[..., None]  # [B, N, 1]
             # print('current i=%d' % (i))
             # print('obj_mask=%s' % (str(obj_mask.shape)))
-            cur_input = torch.cat((xyz, rgb), dim=-1)
+            # cur_input = torch.cat((xyz, rgb), dim=-1)
             # print('cur_input=%s' % (str(cur_input.shape)))
-            cur_input = torch.cat([cur_input, state[:, None].repeat(1, N, 1)], dim=-1)  # [B, N, xyz+rgb+robot_state]
+            # cur_input = torch.cat([cur_input, state[:, None].repeat(1, N, 1), seg], dim=-1)  # [B, N, xyz+rgb+robot_state+seg]
             # print('cur_input=%s' % (str(cur_input.shape)))
             # cur_input[32 1200 44 for drawer] obj_mask [32 1200]
-            points_ft, xyz_and_feats = self.pcd_pns[i](cur_input, obj_mask)
+            points_ft, xyz_and_feats = self.pcd_pns[i](pcd, state, obj_mask)
             # points_ft [32 4 512]
             # print('points_ft=%s' % (str(points_ft.shape)))
             # print('xyz_and_feats=%s' % (str(xyz_and_feats.shape)))
@@ -352,6 +399,17 @@ class PointTransformerManiV0(PointBackbone):
         global_feature = torch.cat(obj_features, dim=-1)  # [B, (NO + 3) * F]
         # print('global_feature=%s' % (str(global_feature.shape)))
         # print('Y', global_feature.shape)
+        random_global_features = []
+        for i in range(self.eigen_vectors):
+            tmp = global_feature * self.eigen_vectors[i]
+            print('#########################')
+            print('global_feature=%s' % (str(global_feature.shape)))
+            print('eigen_vector=%s' % (str(self.eigen_vectors[i].shape)))
+            print('tmp=%s' % (str(tmp.shape)))
+            random_global_features.append(tmp)
+        
+        random_global_features = torch.stack(random_global_features, dim=-1)
+        global_feature = torch.mean(random_global_features, dim=-1)
         x = self.global_mlp(global_feature)
         # print('x=%s' % (str(x.shape)))
         # print(x)
