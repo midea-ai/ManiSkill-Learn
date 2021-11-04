@@ -70,8 +70,7 @@ class UserPolicy(BasePolicy):
         self.stack_frame = 1
 
         # cfg_path = str(pathlib.Path('./configs/bc/mani_skill_point_cloud_transformer.py').resolve())
-        # cfg_path = os.path.join(os.path.dirname(__file__), './configs/cql/mani_skill_point_cloud_transformer.py')
-        cfg_path = os.path.join(os.path.dirname(__file__), './configs/bc/mani_skill_point_cloud_transformer.py')
+        cfg_path = os.path.join(os.path.dirname(__file__), './configs/cql/mani_skill_point_cloud_transformer.py')
         cfg_path = str(pathlib.Path(cfg_path).resolve())
         cfg = Config.fromfile(cfg_path)
         cfg.env_cfg['env_name'] = env_name
@@ -81,14 +80,14 @@ class UserPolicy(BasePolicy):
         cfg.agent['action_space'] = action_space
 
         self.agent = build_brl(cfg.agent)
-        # if env_name.find('Bucket') >= 0:
-        #     ckpt_path = os.path.join(os.path.dirname(__file__), './work_dirs/cql_transformer_bucket/CQL/models/model_115000.ckpt')
-        # if env_name.find('Chair') >= 0:
-        #     ckpt_path = os.path.join(os.path.dirname(__file__), './work_dirs/cql_transformer_chair/CQL/models/model_115000.ckpt')
+        if env_name.find('Bucket') >= 0:
+            ckpt_path = os.path.join(os.path.dirname(__file__), './work_dirs/cql_transformer_bucket/CQL/models/model_115000.ckpt')
+        if env_name.find('Chair') >= 0:
+            ckpt_path = os.path.join(os.path.dirname(__file__), './work_dirs/cql_transformer_chair/CQL/models/model_115000.ckpt')
         if env_name.find('Door') >= 0:
-            ckpt_path = os.path.join(os.path.dirname(__file__), './work_dirs/base_bc_point_transformer_door/BC/models/model_140000.ckpt')
-        # if env_name.find('Drawer') >= 0:
-        #     ckpt_path = os.path.join(os.path.dirname(__file__), './work_dirs/cql_transformer_drawer/CQL/models/model_90000.ckpt')
+            ckpt_path = os.path.join(os.path.dirname(__file__), './work_dirs/cql_transformer_door/CQL/models/model_90000.ckpt')
+        if env_name.find('Drawer') >= 0:
+            ckpt_path = os.path.join(os.path.dirname(__file__), './work_dirs/cql_transformer_drawer/CQL/models/model_90000.ckpt')
         # load_checkpoint(self.agent,
         #     str(pathlib.Path('./example_mani_skill_data/OpenCabinetDrawer_1045_link_0-v0_PN_Transformer.ckpt').resolve()),
         #     map_location='cpu'
