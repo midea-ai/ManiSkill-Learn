@@ -6,6 +6,8 @@ from numpy import linalg as LA
 
 class demo_net(nn.Module):
     def __init__(self):
+        super(demo_net, self).__init__()
+
         self.fc1 = torch.nn.Linear(2, 2)
 
         self.eigen_vectors = []
