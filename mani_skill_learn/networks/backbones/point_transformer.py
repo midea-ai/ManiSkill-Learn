@@ -331,6 +331,9 @@ class PointTransformerManiV0(PointBackbone):
             # eigen_vector.requires_grad = True
             # print('eigen_vector:', eigen_vector.shape)
             self.eigen_vectors.append(eigen_vector)
+        
+        self.eigen_vectors = torch.stack(self.eigen_vectors, 0)
+        self.eigen_vectors = nn.Parameter(self.eigen_vectors, requires_grad=False)
 
         assert self.num_objs > 0
     
