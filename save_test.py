@@ -15,11 +15,12 @@ class demo_net(nn.Module):
             tmp_matrix = np.random.rand(9).reshape(3, 3)
             tmp_matrix = np.triu(tmp_matrix)
             tmp_matrix = tmp_matrix + tmp_matrix.T - np.diag(tmp_matrix.diagonal())
-            print(tmp_matrix)
+            # print(tmp_matrix)
             eigen_vector, _ = LA.eigh(tmp_matrix)
             eigen_vector = torch.from_numpy(eigen_vector).float()
             # eigen_vector.requires_grad = True
             # print('eigen_vector:', eigen_vector.shape)
+            print(eigen_vector)
             self.eigen_vectors.append(eigen_vector)
         self.eigen_vectors = torch.stack(self.eigen_vectors, 0)
         print('eigen_vector:', self.eigen_vectors.shape)
