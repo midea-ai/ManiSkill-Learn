@@ -23,6 +23,7 @@ class demo_net(nn.Module):
             print(eigen_vector)
             self.eigen_vectors.append(eigen_vector)
         self.eigen_vectors = torch.stack(self.eigen_vectors, 0)
+        self.eigen_vectors = nn.Parameter(self.eigen_vectors)
         print('eigen_vector:', self.eigen_vectors.shape)
 
 net = demo_net()
