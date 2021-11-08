@@ -5,6 +5,8 @@ from mani_skill_learn.utils.data import dict_to_seq
 from mani_skill_learn.utils.torch import masked_average, masked_max
 from ..builder import BACKBONES, build_backbone
 
+import numpy as np
+from numpy import linalg as LA
 
 class PointBackbone(nn.Module):
     def __init__(self):
@@ -90,7 +92,7 @@ class PointNetV0(PointBackbone):
 
 @BACKBONES.register_module()
 class PointNetWithInstanceInfoV0(PointBackbone):
-    def __init__(self, pcd_pn_cfg, state_mlp_cfg, final_mlp_cfg, stack_frame, num_objs, transformer_cfg=None):
+    def __init__(self, pcd_pn_cfg, state_mlp_cfg, final_mlp_cfg, stack_frame, num_objs, num_sym_matrix=0, transformer_cfg=None):
         """
         PointNet with instance segmentation masks.
         There is one MLP that processes the agent state, and (num_obj + 2) PointNets that process background points
@@ -117,6 +119,24 @@ class PointNetWithInstanceInfoV0(PointBackbone):
 
         self.stack_frame = stack_frame
         self.num_objs = num_objs
+        
+        ## random matrix
+        self.num_sym_matrix = num_sym_matrix
+        self.eigen_vectors = []
+        dim = final_mlp_cfg['mlp_spec'][0]
+        for i in range(self.num_sym_matrix):
+            tmp_matrix = np.random.rand(dim**2).reshape(dim, dim)
+            tmp_matrix = np.triu(tmp_matrix)
+            tmp_matrix = tmp_matrix + tmp_matrix.T - np.diag(tmp_matrix.diagonal())
+            eigen_vector, _ = LA.eigh(tmp_matrix)
+            eigen_vector = torch.from_numpy(eigen_vector).float()
+            # eigen_vector.requires_grad = True
+            # print('eigen_vector:', eigen_vector.shape)
+            self.eigen_vectors.append(eigen_vector)
+        
+        self.eigen_vectors = torch.stack(self.eigen_vectors, 0)
+        self.eigen_vectors = nn.Parameter(self.eigen_vectors, requires_grad=False)
+
         assert self.num_objs > 0
 
     def forward_raw(self, pcd, state):
@@ -153,6 +173,22 @@ class PointNetWithInstanceInfoV0(PointBackbone):
         else:
             global_feature = torch.cat(obj_features, dim=-1)  # [B, (NO + 3) * F]
         # print('Y', global_feature.shape)
+
+        random_global_features = []
+        cur_device = global_feature.get_device()
+        for i in range(len(self.eigen_vectors)):
+            self.eigen_vectors[i] = self.eigen_vectors[i].to(cur_device)
+            tmp = global_feature * self.eigen_vectors[i]
+            # print('#########################')
+            # print('global_feature=%s' % (str(global_feature.shape)))
+            # print('eigen_vector=%s' % (str(self.eigen_vectors[i].shape)))
+            # print('tmp=%s' % (str(tmp.shape)))
+            random_global_features.append(tmp)
+
+        if len(self.eigen_vectors) > 0:
+            random_global_features = torch.stack(random_global_features, dim=-1)
+            global_feature = torch.mean(random_global_features, dim=-1)
+
         x = self.global_mlp(global_feature)
         # print(x)
         return x
