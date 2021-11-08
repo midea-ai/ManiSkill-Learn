@@ -10,3 +10,10 @@
 *.h5
 *.ckpt
 events*
+__pycache__
+*/__pycache__
+example_mani_skill_data
+full_mani_skill_data
+full_mani_skill_state_data
+submission_example
+work_dirs
