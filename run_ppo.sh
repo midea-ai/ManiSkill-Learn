@@ -1,0 +1,1 @@
+python run_ppo.py configs/ppo/mani_skill_point_cloud_transformer.py
