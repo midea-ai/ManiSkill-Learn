@@ -334,7 +334,8 @@ class PointTransformerManiV0(PointBackbone):
                 self.eigen_vectors.append(eigen_vector)
             
             self.eigen_vectors = torch.stack(self.eigen_vectors, 0)
-            self.eigen_vectors = nn.Parameter(self.eigen_vectors, requires_grad=False)
+            # self.eigen_vectors = nn.Parameter(self.eigen_vectors, requires_grad=False)
+            self.eigen_vectors = nn.Parameter(self.eigen_vectors)
 
         assert self.num_objs > 0
     
@@ -409,7 +410,7 @@ class PointTransformerManiV0(PointBackbone):
         random_global_features = []
         cur_device = global_feature.get_device()
         for i in range(len(self.eigen_vectors)):
-            self.eigen_vectors[i] = self.eigen_vectors[i].to(cur_device)
+            self.eigen_vectors[i] = self.eigen_vectors[i].to(cur_device).detach()
             tmp = global_feature * self.eigen_vectors[i]
             # print('#########################')
             # print('global_feature=%s' % (str(global_feature.shape)))
