@@ -91,6 +91,7 @@ def train(rank, action_dim, model_cfg, train_cfg, distributed, expert_agent, env
 
             value, action, log_probs, expert_action1 = local_model.act(obs)
         obs, reward, done, info = env.step(action)  # take a random action
+        print('obs.keys:', obs.keys())
         obs = to_torch(obs, device=device, dtype='float32')
         sum_reward += reward
         masks = torch.tensor(1 - done).unsqueeze(-1)

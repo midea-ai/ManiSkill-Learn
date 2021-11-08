@@ -74,6 +74,7 @@ class Counter():
         # count = 0
         self.val.value = 0
 
+
 class PerformanceCounter:
     """enable the chief to access worker's total number of updates"""
 
