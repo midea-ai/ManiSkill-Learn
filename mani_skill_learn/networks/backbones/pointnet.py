@@ -124,18 +124,19 @@ class PointNetWithInstanceInfoV0(PointBackbone):
         self.num_sym_matrix = num_sym_matrix
         self.eigen_vectors = []
         dim = final_mlp_cfg['mlp_spec'][0]
-        for i in range(self.num_sym_matrix):
-            tmp_matrix = np.random.rand(dim**2).reshape(dim, dim)
-            tmp_matrix = np.triu(tmp_matrix)
-            tmp_matrix = tmp_matrix + tmp_matrix.T - np.diag(tmp_matrix.diagonal())
-            eigen_vector, _ = LA.eigh(tmp_matrix)
-            eigen_vector = torch.from_numpy(eigen_vector).float()
-            # eigen_vector.requires_grad = True
-            # print('eigen_vector:', eigen_vector.shape)
-            self.eigen_vectors.append(eigen_vector)
-        
-        self.eigen_vectors = torch.stack(self.eigen_vectors, 0)
-        self.eigen_vectors = nn.Parameter(self.eigen_vectors, requires_grad=False)
+        if self.num_sym_matrix > 0:
+            for i in range(self.num_sym_matrix):
+                tmp_matrix = np.random.rand(dim**2).reshape(dim, dim)
+                tmp_matrix = np.triu(tmp_matrix)
+                tmp_matrix = tmp_matrix + tmp_matrix.T - np.diag(tmp_matrix.diagonal())
+                eigen_vector, _ = LA.eigh(tmp_matrix)
+                eigen_vector = torch.from_numpy(eigen_vector).float()
+                # eigen_vector.requires_grad = True
+                # print('eigen_vector:', eigen_vector.shape)
+                self.eigen_vectors.append(eigen_vector)
+            
+            self.eigen_vectors = torch.stack(self.eigen_vectors, 0)
+            self.eigen_vectors = nn.Parameter(self.eigen_vectors, requires_grad=False)
 
         assert self.num_objs > 0
 
