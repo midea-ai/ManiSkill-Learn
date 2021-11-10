@@ -44,7 +44,11 @@ class BC(BaseAgent):
         self.policy_optim.zero_grad()
         policy_loss.backward()
         self.policy_optim.step()
+        # return {
+        #     'policy_abs_error': torch.abs(pred_action - sampled_batch['actions']).sum(-1).mean().item(),
+        #     'policy_loss': policy_loss.item()
+        # }
         return {
-            'policy_abs_error': torch.abs(pred_action - sampled_batch['actions']).sum(-1).mean().item(),
+            'policy_abs_error': torch.abs(pred_action - true_action).sum(-1).mean().item(),
             'policy_loss': policy_loss.item()
         }

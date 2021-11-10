@@ -1,7 +1,7 @@
 log_level = 'INFO'
 stack_frame = 1
 num_heads = 4
-lstm_len = 2
+lstm_len = 3
 
 agent = dict(
     type='BC',
