@@ -1,9 +1,11 @@
 log_level = 'INFO'
 stack_frame = 1
 num_heads = 4
+lstm_len = 3
 
 agent = dict(
     type='BC',
+    lstm_len=lstm_len,
     batch_size=128,
     policy_cfg=dict(
         type='ContinuousPolicy',
@@ -15,7 +17,7 @@ agent = dict(
             type='PointNetWithInstanceInfoV0',
             stack_frame=stack_frame,
             num_objs='num_objs',
-            num_sym_matrix=10,
+            num_sym_matrix=0,
             pcd_pn_cfg=dict(
                 type='PointNetV0',
                 conv_cfg=dict(
@@ -81,8 +83,14 @@ agent = dict(
                 inactivated_output=True,
                 linear_init_cfg=dict(type='xavier_init', gain=1, bias=0),
             ),
+            lstm_cfg=dict(
+                lstm_len=lstm_len,
+                input_size=256, 
+                hidden_sizes=256,
+                num_layers=2,
+            ),
         ),
-        optim_cfg=dict(type='Adam', lr=3e-4, weight_decay=5e-6),
+        optim_cfg=dict(type='Adam', lr=3e-5, weight_decay=5e-6),
     ),
 )
 

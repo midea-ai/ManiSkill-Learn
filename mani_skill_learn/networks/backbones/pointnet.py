@@ -199,13 +199,13 @@ class PointNetWithInstanceInfoV0(PointBackbone):
             else:
                 B = B // L 
                 global_feature = global_feature.view(L, B, -1)
-            print('global_feature: ', global_feature.shape)
+            # print('global_feature: ', global_feature.shape)
             outputs, (ht, ct) = self.global_lstm(global_feature)
             # ht is the last hidden state of the sequences
             # ht = (1 x batch_size x hidden_dim)
             # ht[-1] = (batch_size x hidden_dim)
             global_feature = ht[-1]
-            print('after lstm global_feature: ', global_feature.shape)
+            # print('after lstm global_feature: ', global_feature.shape)
 
         random_global_features = []
         cur_device = global_feature.get_device()
