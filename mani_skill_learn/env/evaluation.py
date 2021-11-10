@@ -237,7 +237,7 @@ class Evaluation:
                     
                     merge_obs = lstm_obs[0]
                     merge_obs['state'] = np.stack(state_list)
-                    print("state: %s" % (merge_obs['state'].shape))
+                    print("state: %s" % (str(merge_obs['state'].shape)))
                     # k = 'state'
                     # # merge_obs = {k: np.stack(merge_obs[k]) for k in merge_obs}
                     # merge_obs[k] = np.stack(merge_obs[k])
@@ -249,7 +249,7 @@ class Evaluation:
                     merge_obs[k]['rgb'] = np.stack(rgb_list)
                     merge_obs[k]['seg'] = np.stack(seg_list)
                     for sub_k in merge_obs[k]:
-                        print("sub_k: %s; v: %s" % (sub_k, merge_obs[k][sub_k].shape))
+                        print("sub_k: %s; v: %s" % (str(sub_k), str(merge_obs[k][sub_k].shape)))
                     # action = to_np(pi(unsqueeze(merge_obs, axis=0), mode=self.sample_mode))[0]
 
                     action = to_np(pi(merge_obs, mode=self.sample_mode))[0]
