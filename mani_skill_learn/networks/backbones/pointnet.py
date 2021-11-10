@@ -166,7 +166,7 @@ class PointNetWithInstanceInfoV0(PointBackbone):
 
         # print('xyz:', xyz.shape)
         # print('rgb:', rgb.shape)
-        print('seg:', seg.shape)
+        # print('seg:', seg.shape)
 
         obj_masks = [1. - (torch.sum(seg, dim=-1) > 0.5).type(xyz.dtype)]  # [B, N], the background mask
         for i in range(self.num_objs):
