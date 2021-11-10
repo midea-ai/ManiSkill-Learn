@@ -186,6 +186,7 @@ class Evaluation:
         self.start(work_dir)
         import torch
         from mani_skill_learn.utils.torch import get_cuda_info
+        import numpy as np
 
         def reset_pi():
             if hasattr(pi, 'reset'):
@@ -217,13 +218,25 @@ class Evaluation:
                     action = to_np(pi(unsqueeze(obs, axis=0), mode=self.sample_mode))[0]
                 else:
                     merge_obs = lstm_obs[0]
-                    for k in merge_obs:
-                        print("k: %s; v: %s" % (k, merge_obs[k]))
+                    # for k in merge_obs:
+                    #     print("k: %s; v: %s" % (k, merge_obs[k]))
 
                     for i in range(pi.lstm_len - 1):
-                        merge_obs = {k: [merge_obs[k], lstm_obs[i+1].get(k)] for k in merge_obs}
-                    merge_obs = {k: torch.stack(merge_obs[k]) for k in merge_obs}
+                        k = 'state'
+                        merge_obs[k] = [merge_obs[k], lstm_obs[i+1].get(k)]
+                        k = 'pointcloud'
+                        merge_obs[k] = {sub_k: [merge_obs[k][sub_k], lstm_obs[i+1][k][sub_k]] for sub_k in merge_obs[k]}
+                        # merge_obs = {k: [merge_obs[k], lstm_obs[i+1].get(k)] for k in merge_obs}
+                    k = 'state'
+                    merge_obs = {k: np.stack(merge_obs[k]) for k in merge_obs}
+                    print("k: %s; v: %s" % (k, merge_obs[k].shape))
+
+                    k = 'pointcloud'
+                    merge_obs[k] = {sub_k: np.stack(merge_obs[k][sub_k]) for sub_k in merge_obs[k]}
+                    for sub_k in merge_obs[k]:
+                        print("sub_k: %s; v: %s" % (sub_k, merge_obs[k][sub_k].shape))
                     # action = to_np(pi(unsqueeze(merge_obs, axis=0), mode=self.sample_mode))[0]
+
                     action = to_np(pi(merge_obs, mode=self.sample_mode))[0]
 
             episode_done = self.step(action)
