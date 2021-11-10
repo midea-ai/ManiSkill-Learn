@@ -25,7 +25,7 @@ class ReplayMemory:
         self.memory = {}
         self.position = 0
         self.running_count = 0
-        self.tracjectory_pos = []
+        self.tracjectory_pos = [0]
 
     def __getitem__(self, key):
         return self.memory[key]
@@ -63,18 +63,22 @@ class ReplayMemory:
         else:
             for i, idx in enumerate(batch_idx):
                 for trac_end_idx in self.tracjectory_pos:
-                    if idx >= trac_end_idx:
-                        continue
-                    else:
-                        if idx > (trac_end_idx - seq_length):
-                            batch_idx[i] = trac_end_idx - seq_length
+                    if idx - trac_end_idx + 1 < seq_length:
+                        batch_idx[i] = trac_end_idx + seq_length -1
                         break
+
+                    # if idx >= trac_end_idx:
+                    #     continue
+                    # else:
+                    #     if idx > (trac_end_idx - seq_length):
+                    #         batch_idx[i] = trac_end_idx - seq_length
+                    #     break
 
             new_batch_idx = []
             for idx in batch_idx:
+                for offset in range(seq_length-1, 0, -1):
+                    new_batch_idx.append(idx - offset)
                 new_batch_idx.append(idx)
-                for offset in range(1, seq_length):
-                    new_batch_idx.append(idx + offset)
             # print("new_batch_idx: %s", str(new_batch_idx))
             return sample_element_in_dict_array(self.memory, new_batch_idx)
 

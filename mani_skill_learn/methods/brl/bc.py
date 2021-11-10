@@ -36,7 +36,11 @@ class BC(BaseAgent):
             if not isinstance(sampled_batch[key], dict) and sampled_batch[key].ndim == 1:
                 sampled_batch[key] = sampled_batch[key][..., None]
         pred_action = self.policy(sampled_batch['obs'], mode='eval')
-        policy_loss = F.mse_loss(pred_action, sampled_batch['actions'])
+        true_action = sampled_batch['actions'][::self.lstm_len]
+        print('true_action', true_action.shape)
+        print('pred_action', pred_action.shape)
+        # policy_loss = F.mse_loss(pred_action, sampled_batch['actions'])
+        policy_loss = F.mse_loss(pred_action, true_action)
         self.policy_optim.zero_grad()
         policy_loss.backward()
         self.policy_optim.step()
