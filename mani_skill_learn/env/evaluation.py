@@ -228,7 +228,8 @@ class Evaluation:
                         merge_obs[k] = {sub_k: [merge_obs[k][sub_k], lstm_obs[i+1][k][sub_k]] for sub_k in merge_obs[k]}
                         # merge_obs = {k: [merge_obs[k], lstm_obs[i+1].get(k)] for k in merge_obs}
                     k = 'state'
-                    merge_obs = {k: np.stack(merge_obs[k]) for k in merge_obs}
+                    # merge_obs = {k: np.stack(merge_obs[k]) for k in merge_obs}
+                    merge_obs[k] = np.stack(merge_obs[k])
                     print("k: %s; v: %s" % (k, merge_obs[k].shape))
 
                     k = 'pointcloud'
