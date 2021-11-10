@@ -162,7 +162,7 @@ class PointNetWithInstanceInfoV0(PointBackbone):
         seg = pcd.pop('seg')  # [B, N, NO]
         xyz = pcd['xyz']  # [B, N, 3]
 
-        B = xyz.shape[0].value
+        B = xyz.shape[0]
 
         # print('xyz:', xyz.shape)
         # print('rgb:', rgb.shape)
