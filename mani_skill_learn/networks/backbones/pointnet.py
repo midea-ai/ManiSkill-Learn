@@ -197,7 +197,7 @@ class PointNetWithInstanceInfoV0(PointBackbone):
                 global_feature = global_feature.view(1, 1, -1)
                 global_feature = global_feature.repeat(L, 1, 1)
             else:
-                B = B / L 
+                B = B // L 
                 global_feature = global_feature.view(L, B, -1)
             print('global_feature: ', global_feature.shape)
             outputs, (ht, ct) = self.global_lstm(global_feature)
