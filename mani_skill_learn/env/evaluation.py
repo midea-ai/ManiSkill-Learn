@@ -199,15 +199,33 @@ class Evaluation:
                 pi.reset(**reset_kwargs)  # Design for recurrent policy and CEM.
 
         reset_pi()
+
+        lstm_obs = []
         while self.episode_id < num:
             obs = self.recent_obs
             if self.use_hidden_state:
                 obs = self.env.get_state()
+            if len(lstm_obs) < pi.lstm_len:
+                lstm_obs.append(obs)
+            else:
+                for i in range(pi.lstm_len - 1):
+                    lstm_obs[i] = lstm_obs[i + 1]
+                lstm_obs[-1] = obs
+
             with torch.no_grad():
-                action = to_np(pi(unsqueeze(obs, axis=0), mode=self.sample_mode))[0]
+                if pi.lstm_len == 1:
+                    action = to_np(pi(unsqueeze(obs, axis=0), mode=self.sample_mode))[0]
+                else:
+                    merge_obs = lstm_obs[0]
+                    for i in range(pi.lstm_len - 1):
+                        merge_obs = {k: [merge_obs[k], lstm_obs[i+1].get(k)] for k in merge_obs}
+                    merge_obs = {k: torch.stack(merge_obs[k]) for k in merge_obs}
+                    # action = to_np(pi(unsqueeze(merge_obs, axis=0), mode=self.sample_mode))[0]
+                    action = to_np(pi(merge_obs, mode=self.sample_mode))[0]
             episode_done = self.step(action)
             if episode_done:
                 reset_pi()
+                lstm_obs = []
                 if self.use_log:
                     print_dict = {}
                     print_dict['memory'] = get_total_memory('G', False)
