@@ -217,6 +217,9 @@ class Evaluation:
                     action = to_np(pi(unsqueeze(obs, axis=0), mode=self.sample_mode))[0]
                 else:
                     merge_obs = lstm_obs[0]
+                    for k in merge_obs:
+                        print("k: %s; v: %s" % (k, merge_obs[k]))
+
                     for i in range(pi.lstm_len - 1):
                         merge_obs = {k: [merge_obs[k], lstm_obs[i+1].get(k)] for k in merge_obs}
                     merge_obs = {k: torch.stack(merge_obs[k]) for k in merge_obs}
