@@ -107,7 +107,7 @@ class ReplayMemory:
             init_buffers = [init_buffers]
         
         if logger is not None:
-            logger.info('Num of datasets', len(init_buffers))
+            logger.info(f'Num of datasets: {len(init_buffers)}')
         print('Num of datasets', len(init_buffers))
         for _ in range(replicate_init_buffer):
             cnt = 0
