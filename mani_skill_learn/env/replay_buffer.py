@@ -71,10 +71,10 @@ class ReplayMemory:
                         break
 
             new_batch_idx = []
-            for idx in enumerate(batch_idx):
+            for idx in batch_idx:
                 new_batch_idx.append(idx)
                 for offset in range(1, seq_length):
-                    new_batch_idx.append(idx + 1)
+                    new_batch_idx.append(idx + offset)
             print("new_batch_idx: %s", str(new_batch_idx))
             return sample_element_in_dict_array(self.memory, new_batch_idx)
 
