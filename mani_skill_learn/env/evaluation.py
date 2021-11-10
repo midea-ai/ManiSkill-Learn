@@ -217,23 +217,37 @@ class Evaluation:
                 if pi.lstm_len == 1 or len(lstm_obs) < pi.lstm_len:
                     action = to_np(pi(unsqueeze(obs, axis=0), mode=self.sample_mode))[0]
                 else:
-                    merge_obs = lstm_obs[0]
                     # for k in merge_obs:
                     #     print("k: %s; v: %s" % (k, merge_obs[k]))
+                    state_list = []
+                    xyz_list = []
+                    rgb_list = []
+                    seg_list = []
+                    for i in range(pi.lstm_len):
+                        state_list.append(lstm_obs[i]['state'])
+                        xyz_list.append(lstm_obs[i]['pointcloud']['xyz'])
+                        rgb_list.append(lstm_obs[i]['pointcloud']['rgb'])
+                        seg_list.append(lstm_obs[i]['pointcloud']['seg'])
 
-                    for i in range(pi.lstm_len - 1):
-                        k = 'state'
-                        merge_obs[k] = [merge_obs[k], lstm_obs[i+1].get(k)]
-                        k = 'pointcloud'
-                        merge_obs[k] = {sub_k: [merge_obs[k][sub_k], lstm_obs[i+1][k][sub_k]] for sub_k in merge_obs[k]}
+                        # k = 'state'
+                        # merge_obs[k] = [merge_obs[k], lstm_obs[i+1].get(k)]
+                        # k = 'pointcloud'
+                        # merge_obs[k] = {sub_k: [merge_obs[k][sub_k], lstm_obs[i+1][k][sub_k]] for sub_k in merge_obs[k]}
                         # merge_obs = {k: [merge_obs[k], lstm_obs[i+1].get(k)] for k in merge_obs}
-                    k = 'state'
-                    # merge_obs = {k: np.stack(merge_obs[k]) for k in merge_obs}
-                    merge_obs[k] = np.stack(merge_obs[k])
-                    print("k: %s; v: %s" % (k, merge_obs[k].shape))
+                    
+                    merge_obs = lstm_obs[0]
+                    merge_obs['state'] = np.stack(state_list)
+                    print("state: %s" % (merge_obs['state'].shape))
+                    # k = 'state'
+                    # # merge_obs = {k: np.stack(merge_obs[k]) for k in merge_obs}
+                    # merge_obs[k] = np.stack(merge_obs[k])
+                    # print("k: %s; v: %s" % (k, merge_obs[k].shape))
 
                     k = 'pointcloud'
-                    merge_obs[k] = {sub_k: np.stack(merge_obs[k][sub_k]) for sub_k in merge_obs[k]}
+                    # merge_obs[k] = {sub_k: np.stack(merge_obs[k][sub_k]) for sub_k in merge_obs[k]}
+                    merge_obs[k]['xyz'] = np.stack(xyz_list)
+                    merge_obs[k]['rgb'] = np.stack(rgb_list)
+                    merge_obs[k]['seg'] = np.stack(seg_list)
                     for sub_k in merge_obs[k]:
                         print("sub_k: %s; v: %s" % (sub_k, merge_obs[k][sub_k].shape))
                     # action = to_np(pi(unsqueeze(merge_obs, axis=0), mode=self.sample_mode))[0]
