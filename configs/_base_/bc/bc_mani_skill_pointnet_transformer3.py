@@ -5,7 +5,6 @@ lstm_len = 2
 
 agent = dict(
     type='BC',
-    lstm_len=2,
     batch_size=128 * lstm_len,
     policy_cfg=dict(
         type='ContinuousPolicy',
