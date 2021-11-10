@@ -13,7 +13,7 @@ from ..builder import BRL
 
 @BRL.register_module()
 class BC(BaseAgent):
-    def __init__(self, policy_cfg, obs_shape, action_shape, action_space, batch_size=128):
+    def __init__(self, policy_cfg, obs_shape, action_shape, action_space, batch_size=128, lstm_len=1):
         super(BC, self).__init__()
         self.batch_size = batch_size
 
@@ -26,8 +26,10 @@ class BC(BaseAgent):
         self.policy = build_model(policy_cfg)
         self.policy_optim = build_optimizer(self.policy, policy_optim_cfg)
 
+        self.lstm_len = lstm_len
+
     def update_parameters(self, memory, updates):
-        sampled_batch = memory.sample(self.batch_size)
+        sampled_batch = memory.sample(self.batch_size, seq_length=self.lstm_len)
         sampled_batch = dict(obs=sampled_batch['obs'], actions=sampled_batch["actions"])
         sampled_batch = to_torch(sampled_batch, device=self.device, dtype='float32')
         for key in sampled_batch:
