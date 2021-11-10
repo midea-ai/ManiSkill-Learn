@@ -213,7 +213,7 @@ class Evaluation:
                 lstm_obs[-1] = obs
 
             with torch.no_grad():
-                if pi.lstm_len == 1:
+                if pi.lstm_len == 1 or len(lstm_obs) < pi.lstm_len:
                     action = to_np(pi(unsqueeze(obs, axis=0), mode=self.sample_mode))[0]
                 else:
                     merge_obs = lstm_obs[0]
@@ -222,6 +222,7 @@ class Evaluation:
                     merge_obs = {k: torch.stack(merge_obs[k]) for k in merge_obs}
                     # action = to_np(pi(unsqueeze(merge_obs, axis=0), mode=self.sample_mode))[0]
                     action = to_np(pi(merge_obs, mode=self.sample_mode))[0]
+
             episode_done = self.step(action)
             if episode_done:
                 reset_pi()
