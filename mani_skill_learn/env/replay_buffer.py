@@ -84,7 +84,7 @@ class ReplayMemory:
                 for offset in range(seq_length-1, 0, -1):
                     new_batch_idx.append(idx - offset)
                 new_batch_idx.append(idx)
-            print("new_batch_idx: %s", str(new_batch_idx[:15]))
+            # print("new_batch_idx: %s", str(new_batch_idx[:15]))
             return sample_element_in_dict_array(self.memory, new_batch_idx)
 
 
