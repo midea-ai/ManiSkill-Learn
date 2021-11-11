@@ -46,6 +46,8 @@ class ReplayMemory:
         self.initialize(**kwargs)
         kwargs = dict(kwargs)
         kwargs['cnt'] = self.running_count
+        for key, value in kwargs.items():
+            print("{0} = {1}".format(key, value))
         assign_single_element_in_dict_array(self.memory, self.position, dict(kwargs))
         self.running_count += 1
         self.position = (self.position + 1) % self.capacity
