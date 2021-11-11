@@ -45,7 +45,7 @@ class ReplayMemory:
         # assert not self.fixed, "Fix replay buffer does not support adding items!"
         self.initialize(**kwargs)
         kwargs = dict(kwargs)
-        kwargs['cnt'] = self.running_count
+        # kwargs['cnt'] = self.running_count
         # for key, value in kwargs.items():
         #     print("{0} = {1}".format(key, value))
         assign_single_element_in_dict_array(self.memory, self.position, dict(kwargs))
@@ -126,6 +126,8 @@ class ReplayMemory:
                     if cnt >= num_trajs_per_demo_file and num_trajs_per_demo_file != -1:
                         break
                     item = {key: item[key] for key in buffer_keys}
+                    trac_len = item['dones']
+                    item['cnt'] = [i for i in range(self.running_count, self.running_count + trac_len)]
                     # for key in buffer_keys:
                     #     print(key)
                     #     print(item[key])

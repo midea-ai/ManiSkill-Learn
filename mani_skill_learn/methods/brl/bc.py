@@ -32,7 +32,7 @@ class BC(BaseAgent):
         sampled_batch = memory.sample(self.batch_size, seq_length=self.lstm_len)
         # print("before dict: batch cnt: %s", str(sampled_batch['cnt'][:15]))
         for key, value in sampled_batch.items():
-            print("{0} = {1}".format(key, value))
+            print("{0} = {1}".format(key, len(value)))
         sampled_batch = dict(obs=sampled_batch['obs'], actions=sampled_batch["actions"])
         print("after dict: batch cnt: %s", str(sampled_batch['cnt'][:15]))
         sampled_batch = to_torch(sampled_batch, device=self.device, dtype='float32')
