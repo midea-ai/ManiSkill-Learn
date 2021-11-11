@@ -79,7 +79,7 @@ class ReplayMemory:
                 for offset in range(seq_length-1, 0, -1):
                     new_batch_idx.append(idx - offset)
                 new_batch_idx.append(idx)
-            # print("new_batch_idx: %s", str(new_batch_idx))
+            print("new_batch_idx: %s", str(new_batch_idx[:15]))
             return sample_element_in_dict_array(self.memory, new_batch_idx)
 
 
@@ -120,6 +120,7 @@ class ReplayMemory:
                     if cnt >= num_trajs_per_demo_file and num_trajs_per_demo_file != -1:
                         break
                     item = {key: item[key] for key in buffer_keys}
+                    item['cnt'] = cnt
                     self.push_batch(**item)
                     cnt += 1
                 self.tracjectory_pos.append(cnt)

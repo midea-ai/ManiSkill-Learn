@@ -1,7 +1,7 @@
 log_level = 'INFO'
 stack_frame = 1
 num_heads = 4
-lstm_len = 2
+lstm_len = 3
 
 agent = dict(
     type='BC',
@@ -90,7 +90,7 @@ agent = dict(
                 num_layers=2,
             ),
         ),
-        optim_cfg=dict(type='Adam', lr=3e-5, weight_decay=5e-6),
+        optim_cfg=dict(type='Adam', lr=3e-2, weight_decay=5e-6),
     ),
 )
 
