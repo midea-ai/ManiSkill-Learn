@@ -130,7 +130,8 @@ class ReplayMemory:
                     for key in item.keys():
                         print(key)
                         # print(item[key])
-                    item['cnt'] = np.array([i for i in range(self.running_count, self.running_count + trac_len)])
+                    tmp = [i for i in range(self.running_count, self.running_count + trac_len)]
+                    item['cnt'] = np.array(tmp)
                     # for key in buffer_keys:
                     #     print(key)
                     #     print(item[key])
