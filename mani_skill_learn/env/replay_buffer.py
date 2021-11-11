@@ -120,6 +120,9 @@ class ReplayMemory:
                     if cnt >= num_trajs_per_demo_file and num_trajs_per_demo_file != -1:
                         break
                     item = {key: item[key] for key in buffer_keys}
+                    for key in buffer_keys:
+                        print(key)
+                        print(item[key])
                     item['cnt'] = cnt
                     self.push_batch(**item)
                     cnt += 1
