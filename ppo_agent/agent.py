@@ -11,7 +11,7 @@ from mani_skill_learn.utils.data import to_torch
 import time
 
 
-def train(rank, action_dim, model_cfg, train_cfg, distributed, expert_agent, env, rollout, num_steps):
+def train(rank, action_dim, model_cfg, train_cfg, distributed, expert_agent, env, rollout, num_steps, num_processes):
     seed = rank + 2021
     random.seed(seed)
     np.random.seed(seed)
@@ -68,7 +68,6 @@ def train(rank, action_dim, model_cfg, train_cfg, distributed, expert_agent, env
         # for name, p in expert_agent.backbone.named_parameters():
         #     print('in expert---> name: ', name, p.data.mean(), 'p.requires_grad', p.requires_grad)
 
-        print('load successfully.')
     local_model.to(device)
 
     # local_model.print_parameters()
@@ -79,24 +78,47 @@ def train(rank, action_dim, model_cfg, train_cfg, distributed, expert_agent, env
     episode = 0
     steps = 0
     sum_reward = 0
+    av_reward = []
 
     if not distributed:
         optimizer = optim.Adam(local_model.parameters(), lr=lr)
     st_time = time.time()
+    # infos_in = [{'demo_value_in': [], 'demo_in': [], 'value': None} for i in range(num_processes)]
+    # todo: debug ?
+    infos_in = [{'demo_value_in': [], 'demo_in': [], 'value': 0} for i in range(num_processes)]
+
     while episode < total_episode:
         expert_action = None
-        env.render('human')
+        # env.render('human')
         with torch.no_grad():
             obs = rollout.get_obs()
 
             value, action, log_probs, expert_action1 = local_model.act(obs)
-        obs, reward, done, info = env.step(action)  # take a random action
-        print('obs.keys:', obs.keys())
+
+        for ii in range(len(infos_in)):
+            infos_in[ii]['value'] = value[ii].cpu().numpy()
+        action_ = (action, infos_in)
+        obs, reward, done, infos = env.step(action_)  # take a random action
+        # expert_action1 = (expert_action1, infos_in)
+        # obs, reward, done, infos = env.step(expert_action1)  # take an expert action
+        # print('success:', info[0]['eval_info']['success'], '; open_enough', info[0]['eval_info']['open_enough'])
+        # print(done)
+
+
+        with torch.no_grad():
+            for ii, info in enumerate(infos):
+                if info['true_action'] is True:
+                    # replay
+                    log_probs[ii] = 0
+
         obs = to_torch(obs, device=device, dtype='float32')
         sum_reward += reward
+        av_reward.append(reward)
         masks = torch.tensor(1 - done).unsqueeze(-1)
         rollout.insert(obs, action, value, log_probs, masks, reward, expert_action)
-
+        # if int(done[0]) == 1:
+        #     print('avg_reward:', np.mean(av_reward))
+        #     av_reward = []
         steps += 1
 
         if steps % num_steps == 0:

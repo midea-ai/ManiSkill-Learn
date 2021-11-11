@@ -62,7 +62,7 @@ if __name__ == '__main__':
     import torch.distributed as dist, torch
 
     # env_make = build_env(env_config.env_cfg)
-    env_make = make_maniskill_env(env_config.env_cfg)
+    env_make = make_maniskill_env(env_config.env_cfg, env_config.replayer_cfg)
     num_process = env_config.rollout_cfg.num_process
     num_state_stack = 0
     num_frame_stack = 0
@@ -101,4 +101,4 @@ if __name__ == '__main__':
 
     #
     train(0, action_shape, env_config.model_cfg, env_config.train_mfrl_cfg, False, expert_agent, envs, rollout,
-          rollout_cfg.num_steps)
+          rollout_cfg.num_steps, num_process)

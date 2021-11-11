@@ -147,7 +147,6 @@ class PointNetWithInstanceInfoV0(PointBackbone):
 
         obj_features = []
         obj_features.append(self.state_mlp(state))
-        # print('len(obj_masks):', len(obj_masks))
         for i in range(len(obj_masks)):
             obj_mask = obj_masks[i]
             obj_features.append(self.pcd_pns[i].forward_raw(pcd, state, obj_mask))  # [B, F]

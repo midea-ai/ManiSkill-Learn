@@ -8,7 +8,7 @@ from tabulate import tabulate
 class Evaluator(object):
     def __init__(self, env_name, policy):
         self.env_name = env_name
-        self.env = gym.make(env_name, obs_mode=policy.obs_mode)
+        self.env = gym.make(env_name, obs_mode=policy.obs_mode, reward_type='self_design')
         self.policy = policy
         self.result = {}
 

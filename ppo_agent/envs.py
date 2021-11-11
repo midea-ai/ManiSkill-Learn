@@ -51,33 +51,15 @@ class VecPyTorch(VecEnvWrapper):
 
     def reset(self):
         obs = self.venv.reset()
-        # vec_obs = {}
-        # for keys in obs.keys():
-        #     if type(obs[keys][0]) == np.ndarray:
-        #         vec_obs[keys] = []
-        #         for env_id in range(len(obs[keys])):
-        #             vec_obs[keys].append(obs[keys][env_id])
-        #         vec_obs[keys] = np.asarray(vec_obs[keys])
-        #     elif type(obs[keys][0]) == dict:
-        #         # vec_obs[keys] = dict.fromkeys(obs[keys][0].keys(), [])
-        #         vec_obs[keys] = {}
-        #         for sub_keys in obs[keys][0].keys():
-        #             vec_obs[keys][sub_keys] = []
-        #             for env_id in range(len(obs[keys])):
-        #                 vec_obs[keys][sub_keys].append(obs[keys][env_id][sub_keys])
-        #             vec_obs[keys][sub_keys] = np.asarray(vec_obs[keys][sub_keys])
-        #     else:
-        #         print('ERROR', type(obs[keys][0]))
-        # obs = to_torch(vec_obs, device=self.device, dtype='float32')
         return obs
 
     def step_async(self, actions):
-        # actions, infos_in = actions
+        actions, infos_in = actions
         if isinstance(actions, torch.Tensor):
             # Squeeze the dimension for discrete actions
             actions = actions.squeeze(-1)
         actions = actions.cpu().numpy()
-        # actions = (actions, infos_in)
+        actions = (actions, infos_in)
         self.venv.step_async(actions)
 
     def step_wait(self):

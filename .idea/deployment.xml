@@ -17,6 +17,9 @@
             <excludedPath path="/home/quan/ManiSkill-Learn/full_mani_skill_state_data" />
             <excludedPath path="/home/quan/ManiSkill-Learn/work_dirs" />
             <excludedPath path="/home/quan/ManiSkill-Learn/partnet-mobility-dataset" />
+            <excludedPath path="/home/quan/ManiSkill-Learn/demonstrations" />
+            <excludedPath path="/home/quan/ManiSkill-Learn/test" />
+            <excludedPath local="true" path="$PROJECT_DIR$/test" />
           </excludedPaths>
         </serverdata>
       </paths>

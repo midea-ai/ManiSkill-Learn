@@ -11,10 +11,10 @@ def worker(remote, parent_remote, env_fn_wrapper):
         while True:
             cmd, data = remote.recv()
             if cmd == 'step':
-                # ac, infos_in = data
-                ac = data
-                # ob, reward, done, info = env.step((ac,infos_in))
-                ob, reward, done, info = env.step(ac)
+                ac, infos_in = data
+                # ac = data
+                ob, reward, done, info = env.step((ac, infos_in))
+                # ob, reward, done, info = env.step(ac)
                 # info['infos_in'] = infos_in
                 if done:
                     ob = env.reset()
@@ -72,11 +72,11 @@ class MySubprocVecEnv(VecEnv):
         VecEnv.__init__(self, len(env_fns), observation_space, action_space)
 
     def step_async(self, actions):
-        # actions, infos_in = actions
+        actions, infos_in = actions
         self._assert_not_closed()
-        # for remote, action, info_in in zip(self.remotes, actions, infos_in):
-        for remote, action in zip(self.remotes, actions):
-            remote.send(('step', action))
+        # for remote, action in zip(self.remotes, actions):
+        for remote, action, info_in in zip(self.remotes, actions, infos_in):
+            remote.send(('step', (action, info_in)))
         self.waiting = True
 
     def convert_obs(self, obs):
