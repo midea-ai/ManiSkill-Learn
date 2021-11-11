@@ -127,7 +127,7 @@ class ReplayMemory:
                         break
                     item = {key: item[key] for key in buffer_keys}
                     trac_len = item['dones']
-                    item['cnt'] = [i for i in range(self.running_count, self.running_count + trac_len)]
+                    item['cnt'] = np.array([i for i in range(self.running_count, self.running_count + trac_len)])
                     # for key in buffer_keys:
                     #     print(key)
                     #     print(item[key])
