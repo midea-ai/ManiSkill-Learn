@@ -2,6 +2,7 @@ import numpy as np
 from h5py import File, Group
 
 from .type import is_seq_of
+import torch
 
 
 def get_one_shape(x):
@@ -60,6 +61,23 @@ def unsqueeze(x, axis=0):
             return torch.unsqueeze(x, dim=axis)
         else:
             raise NotImplementedError()
+
+# def merge_obs(x, axis=0):
+#     if isinstance(x, list):
+
+
+#     if isinstance(x, np.ndarray):
+#         return np.expand_dims(x, axis=axis)
+#     elif isinstance(x, dict):
+#         return {key: unsqueeze(x[key], axis=axis) for key in x}
+#     elif isinstance(x, (list, tuple)):
+#         return type(x)([unsqueeze(_, axis=axis) for _ in x])
+#     else:
+#         import torch
+#         if isinstance(x, torch.Tensor):
+#             return torch.unsqueeze(x, dim=axis)
+#         else:
+#             raise NotImplementedError()
 
 
 def reshape(x, target_shape):

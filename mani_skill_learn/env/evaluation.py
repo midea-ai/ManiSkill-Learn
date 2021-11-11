@@ -186,6 +186,7 @@ class Evaluation:
         self.start(work_dir)
         import torch
         from mani_skill_learn.utils.torch import get_cuda_info
+        import numpy as np
 
         def reset_pi():
             if hasattr(pi, 'reset'):
@@ -199,16 +200,65 @@ class Evaluation:
                 pi.reset(**reset_kwargs)  # Design for recurrent policy and CEM.
 
         reset_pi()
+
+        lstm_obs = []
         while self.episode_id < num:
             # self.env.render('human')
             obs = self.recent_obs
             if self.use_hidden_state:
                 obs = self.env.get_state()
+            if len(lstm_obs) < pi.lstm_len:
+                lstm_obs.append(obs)
+            else:
+                for i in range(pi.lstm_len - 1):
+                    lstm_obs[i] = lstm_obs[i + 1]
+                lstm_obs[-1] = obs
+
             with torch.no_grad():
-                action = to_np(pi(unsqueeze(obs, axis=0), mode=self.sample_mode))[0]
+                if pi.lstm_len == 1 or len(lstm_obs) < pi.lstm_len:
+                    action = to_np(pi(unsqueeze(obs, axis=0), mode=self.sample_mode))[0]
+                else:
+                    # for k in merge_obs:
+                    #     print("k: %s; v: %s" % (k, merge_obs[k]))
+                    state_list = []
+                    xyz_list = []
+                    rgb_list = []
+                    seg_list = []
+                    for i in range(pi.lstm_len):
+                        state_list.append(lstm_obs[i]['state'])
+                        xyz_list.append(lstm_obs[i]['pointcloud']['xyz'])
+                        rgb_list.append(lstm_obs[i]['pointcloud']['rgb'])
+                        seg_list.append(lstm_obs[i]['pointcloud']['seg'])
+
+                        # k = 'state'
+                        # merge_obs[k] = [merge_obs[k], lstm_obs[i+1].get(k)]
+                        # k = 'pointcloud'
+                        # merge_obs[k] = {sub_k: [merge_obs[k][sub_k], lstm_obs[i+1][k][sub_k]] for sub_k in merge_obs[k]}
+                        # merge_obs = {k: [merge_obs[k], lstm_obs[i+1].get(k)] for k in merge_obs}
+                    
+                    merge_obs = lstm_obs[0]
+                    merge_obs['state'] = np.stack(state_list)
+                    # print("state: %s" % (str(merge_obs['state'].shape)))
+                    # k = 'state'
+                    # # merge_obs = {k: np.stack(merge_obs[k]) for k in merge_obs}
+                    # merge_obs[k] = np.stack(merge_obs[k])
+                    # print("k: %s; v: %s" % (k, merge_obs[k].shape))
+
+                    k = 'pointcloud'
+                    # merge_obs[k] = {sub_k: np.stack(merge_obs[k][sub_k]) for sub_k in merge_obs[k]}
+                    merge_obs[k]['xyz'] = np.stack(xyz_list)
+                    merge_obs[k]['rgb'] = np.stack(rgb_list)
+                    merge_obs[k]['seg'] = np.stack(seg_list)
+                    # for sub_k in merge_obs[k]:
+                        # print("sub_k: %s; v: %s" % (str(sub_k), str(merge_obs[k][sub_k].shape)))
+                    # action = to_np(pi(unsqueeze(merge_obs, axis=0), mode=self.sample_mode))[0]
+
+                    action = to_np(pi(merge_obs, mode=self.sample_mode))[0]
+
             episode_done = self.step(action)
             if episode_done:
                 reset_pi()
+                lstm_obs = []
                 if self.use_log:
                     print_dict = {}
                     print_dict['memory'] = get_total_memory('G', False)

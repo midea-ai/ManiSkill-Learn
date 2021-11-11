@@ -277,7 +277,7 @@ class OpenCabinetEnvBase(BaseEnv):
         rew_ee_mid_handle = normalize_and_clip_in_interval(dist_ee_mid_to_handle, -0.01, 4E-3) - 1
 
         reward = gripper_angle_rew + rew_ee_handle + rew_ee_mid_handle - (dist_coefficient + vel_coefficient)
-        print('reward:', gripper_angle_rew, rew_ee_handle, rew_ee_mid_handle)
+        # print('reward:', gripper_angle_rew, rew_ee_handle, rew_ee_mid_handle)
         stage_reward = -(5 + vel_coefficient + dist_coefficient)
 
         vel_reward = 0

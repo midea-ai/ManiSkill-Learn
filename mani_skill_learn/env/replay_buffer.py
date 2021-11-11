@@ -25,6 +25,7 @@ class ReplayMemory:
         self.memory = {}
         self.position = 0
         self.running_count = 0
+        self.tracjectory_pos = [0]
 
     def __getitem__(self, key):
         return self.memory[key]
@@ -55,9 +56,32 @@ class ReplayMemory:
         for i in range(batch_size):
             self.push(**sample_element_in_dict_array(kwargs, i))
 
-    def sample(self, batch_size):
+    def sample(self, batch_size, seq_length=1):
         batch_idx = np.random.randint(low=0, high=len(self), size=batch_size)
-        return sample_element_in_dict_array(self.memory, batch_idx)
+        if seq_length == 1:
+            return sample_element_in_dict_array(self.memory, batch_idx)
+        else:
+            for i, idx in enumerate(batch_idx):
+                for trac_end_idx in self.tracjectory_pos:
+                    if idx - trac_end_idx + 1 < seq_length:
+                        batch_idx[i] = trac_end_idx + seq_length -1
+                        break
+
+                    # if idx >= trac_end_idx:
+                    #     continue
+                    # else:
+                    #     if idx > (trac_end_idx - seq_length):
+                    #         batch_idx[i] = trac_end_idx - seq_length
+                    #     break
+
+            new_batch_idx = []
+            for idx in batch_idx:
+                for offset in range(seq_length-1, 0, -1):
+                    new_batch_idx.append(idx - offset)
+                new_batch_idx.append(idx)
+            # print("new_batch_idx: %s", str(new_batch_idx))
+            return sample_element_in_dict_array(self.memory, new_batch_idx)
+
 
     def tail_mean(self, num):
         func = lambda _, __, ___: np.mean(_[___ - __:___])
@@ -77,7 +101,7 @@ class ReplayMemory:
         else:
             store_dict_array_to_h5(data, file)
 
-    def restore(self, init_buffers, replicate_init_buffer=1, num_trajs_per_demo_file=-1):
+    def restore(self, init_buffers, replicate_init_buffer=1, num_trajs_per_demo_file=-1, logger=None):
         buffer_keys = ['obs', 'actions', 'next_obs', 'rewards', 'dones']
         if isinstance(init_buffers, str):
             init_buffers = [init_buffers]
@@ -85,7 +109,9 @@ class ReplayMemory:
             init_buffers = [load_h5s_as_list_dict_array(_) for _ in init_buffers]
         if isinstance(init_buffers, dict):
             init_buffers = [init_buffers]
-
+        
+        if logger is not None:
+            logger.info(f'Num of datasets: {len(init_buffers)}')
         print('Num of datasets', len(init_buffers))
         for _ in range(replicate_init_buffer):
             cnt = 0
@@ -96,6 +122,10 @@ class ReplayMemory:
                     item = {key: item[key] for key in buffer_keys}
                     self.push_batch(**item)
                     cnt += 1
+                self.tracjectory_pos.append(cnt)
+        
+        if logger is not None:
+            logger.info(f'Num of buffers {len(init_buffers)}, Total steps {self.running_count}')
         print(f'Num of buffers {len(init_buffers)}, Total steps {self.running_count}')
 
 

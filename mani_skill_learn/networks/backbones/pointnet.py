@@ -92,7 +92,7 @@ class PointNetV0(PointBackbone):
 
 @BACKBONES.register_module()
 class PointNetWithInstanceInfoV0(PointBackbone):
-    def __init__(self, pcd_pn_cfg, state_mlp_cfg, final_mlp_cfg, stack_frame, num_objs, num_sym_matrix=0, transformer_cfg=None):
+    def __init__(self, pcd_pn_cfg, state_mlp_cfg, final_mlp_cfg, stack_frame, num_objs, num_sym_matrix=0, transformer_cfg=None, lstm_cfg=None):
         """
         PointNet with instance segmentation masks.
         There is one MLP that processes the agent state, and (num_obj + 2) PointNets that process background points
@@ -116,6 +116,13 @@ class PointNetWithInstanceInfoV0(PointBackbone):
         self.attn = build_backbone(transformer_cfg) if transformer_cfg is not None else None
         self.state_mlp = build_backbone(state_mlp_cfg)
         self.global_mlp = build_backbone(final_mlp_cfg)
+        # self.global_lstm = build_backbone(lstm_cfg) if lstm_cfg is not None else None
+        if lstm_cfg is not None:
+            self.lstm_len = lstm_cfg['lstm_len']
+            self.global_lstm = nn.LSTM(lstm_cfg['input_size'], lstm_cfg['hidden_sizes'], num_layers=lstm_cfg['num_layers'])
+        else:
+            self.lstm_len = 1
+            self.global_lstm = None
 
         self.stack_frame = stack_frame
         self.num_objs = num_objs
@@ -154,6 +161,13 @@ class PointNetWithInstanceInfoV0(PointBackbone):
         pcd = pcd.copy()
         seg = pcd.pop('seg')  # [B, N, NO]
         xyz = pcd['xyz']  # [B, N, 3]
+
+        B = xyz.shape[0]
+
+        # print('xyz:', xyz.shape)
+        # print('rgb:', rgb.shape)
+        # print('seg:', seg.shape)
+
         obj_masks = [1. - (torch.sum(seg, dim=-1) > 0.5).type(xyz.dtype)]  # [B, N], the background mask
         for i in range(self.num_objs):
             obj_masks.append(seg[..., i])
@@ -175,6 +189,23 @@ class PointNetWithInstanceInfoV0(PointBackbone):
         else:
             global_feature = torch.cat(obj_features, dim=-1)  # [B, (NO + 3) * F]
         # print('Y', global_feature.shape)
+
+        if self.global_lstm is not None:
+            # obs : [L, batch, input]
+            L = self.lstm_len
+            if B == 1:
+                global_feature = global_feature.view(1, 1, -1)
+                global_feature = global_feature.repeat(L, 1, 1)
+            else:
+                B = B // L 
+                global_feature = global_feature.view(L, B, -1)
+            # print('global_feature: ', global_feature.shape)
+            outputs, (ht, ct) = self.global_lstm(global_feature)
+            # ht is the last hidden state of the sequences
+            # ht = (1 x batch_size x hidden_dim)
+            # ht[-1] = (batch_size x hidden_dim)
+            global_feature = ht[-1]
+            # print('after lstm global_feature: ', global_feature.shape)
 
         random_global_features = []
         cur_device = global_feature.get_device()

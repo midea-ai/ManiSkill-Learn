@@ -105,7 +105,7 @@ def train_rl(agent, rollout, evaluator, env_cfg, replay, on_policy, work_dir, to
         else:
             files = [str(_) for _ in Path(folder_root).glob('*.h5') if re.split('[_-]', _.name)[1] in model_split_file]
         print(files)
-        replay.restore(files, replicate_init_buffer, num_trajs_per_demo_file)
+        replay.restore(files, replicate_init_buffer, num_trajs_per_demo_file, logger)
 
     tf_logs = ReplayMemory(total_steps)
     tf_logs.reset()
