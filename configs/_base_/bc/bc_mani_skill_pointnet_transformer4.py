@@ -90,7 +90,7 @@ agent = dict(
                 num_layers=2,
             ),
         ),
-        optim_cfg=dict(type='Adam', lr=3e-5, weight_decay=5e-6),
+        optim_cfg=dict(type='Adam', lr=3e-4, weight_decay=5e-6),
     ),
 )
 
