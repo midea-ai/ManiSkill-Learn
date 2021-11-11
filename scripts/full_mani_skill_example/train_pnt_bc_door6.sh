@@ -10,7 +10,7 @@ python -m tools.run_rl configs/bc/mani_skill_point_cloud_transformer6.py --gpu-i
 	--work-dir=./work_dirs/bc_pointnet_transformer_door6/ \
 	--cfg-options "train_mfrl_cfg.total_steps=150000" "train_mfrl_cfg.init_replay_buffers=" \
 	"train_mfrl_cfg.init_replay_with_split=[\"./full_mani_skill_data/OpenCabinetDoor/\",\"$model_list\"]" \
-	"env_cfg.env_name=OpenCabinetDoor-v0" "eval_cfg.num=10" "eval_cfg.num_procs=1" "train_mfrl_cfg.n_eval=1000"
+	"env_cfg.env_name=OpenCabinetDoor-v0" "eval_cfg.num=100" "eval_cfg.num_procs=1" "train_mfrl_cfg.n_eval=10000"
 
 # python -m tools.run_rl configs/bc/mani_skill_point_cloud_transformer.py --gpu-ids=0 \
 # 	--work-dir=./work_dirs/base_bc_point_transformer_door/ \
