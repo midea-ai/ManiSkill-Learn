@@ -44,6 +44,8 @@ class ReplayMemory:
     def push(self, **kwargs):
         # assert not self.fixed, "Fix replay buffer does not support adding items!"
         self.initialize(**kwargs)
+        kwargs = dict(kwargs)
+        kwargs['cnt'] = self.running_count
         assign_single_element_in_dict_array(self.memory, self.position, dict(kwargs))
         self.running_count += 1
         self.position = (self.position + 1) % self.capacity
@@ -53,6 +55,7 @@ class ReplayMemory:
         kwargs = dict(kwargs)
         keys, values = dict_to_seq(kwargs)
         batch_size = len(list(filter(lambda v: not isinstance(v, dict), values))[0])
+        self.tracjectory_pos.append(self.tracjectory_pos[-1] + batch_size)
         for i in range(batch_size):
             self.push(**sample_element_in_dict_array(kwargs, i))
 
@@ -117,16 +120,17 @@ class ReplayMemory:
             cnt = 0
             for init_buffer in init_buffers:
                 for item in init_buffer:
+                    # item is a tracjectory
                     if cnt >= num_trajs_per_demo_file and num_trajs_per_demo_file != -1:
                         break
                     item = {key: item[key] for key in buffer_keys}
-                    for key in buffer_keys:
-                        print(key)
-                        print(item[key])
-                    item['cnt'] = cnt
+                    # for key in buffer_keys:
+                    #     print(key)
+                    #     print(item[key])
+                    # item['cnt'] = cnt
                     self.push_batch(**item)
                     cnt += 1
-                self.tracjectory_pos.append(cnt)
+                # self.tracjectory_pos.append(cnt)
         
         if logger is not None:
             logger.info(f'Num of buffers {len(init_buffers)}, Total steps {self.running_count}')
