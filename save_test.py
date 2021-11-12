@@ -47,6 +47,7 @@ tmp = torch.Tensor([[1,1,1,1],
                     [6,6,6,6]])
 print(tmp.shape)
 
+# L, B， N
 z = tmp.view(3, 2, 4)
 print(z.shape)
 print(z[0])
