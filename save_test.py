@@ -42,12 +42,21 @@ from numpy import linalg as LA
 tmp = torch.Tensor([[1,1,1,1],
                     [2,2,2,2],
                     [3,3,3,3],
-                    [4,4,4,4]])
+                    [4,4,4,4],
+                    [5,5,5,5],
+                    [6,6,6,6]])
 print(tmp.shape)
 
-z = tmp.view(2, 2, 4)
+z = tmp.view(3, 2, 4)
 print(z.shape)
 print(z[0])
 print(z[1])
 print(z[2])
-print(z[3])
+
+print('##########')
+z = tmp.view(2, 3, 4)
+z = z.permute(1, 0, 2)
+print(z.shape)
+print(z[0])
+print(z[1])
+print(z[2])
