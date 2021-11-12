@@ -105,10 +105,15 @@ class UserPolicy(BasePolicy):
 
         self.obsprocess = ObsProcess(self.env, self.obs_mode, self.stack_frame)
 
+        self.lstm_obs = []
+
     # def act(self, observation):
     #     ##### Replace with your code
     #     observation = self.obsprocess.process_observation(observation)
     #     return to_np(self.agent(unsqueeze(observation, axis=0), mode='eval'))[0]
+
+    def reset(self):
+        self.self.lstm_obs = []
 
     def act(self, observation):
         ##### Replace with your code
@@ -116,15 +121,15 @@ class UserPolicy(BasePolicy):
         # return to_np(self.agent(unsqueeze(observation, axis=0), mode='eval'))[0]
 
         obs = self.obsprocess.process_observation(observation)
-        lstm_obs = []
-        if len(lstm_obs) < self.agent.lstm_len:
-                lstm_obs.append(obs)
+        # self.lstm_obs = []
+        if len(self.lstm_obs) < self.agent.lstm_len:
+                self.lstm_obs.append(obs)
         else:
             for i in range(self.agent.lstm_len - 1):
-                lstm_obs[i] = lstm_obs[i + 1]
-            lstm_obs[-1] = obs
+                self.lstm_obs[i] = self.lstm_obs[i + 1]
+            self.lstm_obs[-1] = obs
         
-        if self.agent.lstm_len == 1 or len(lstm_obs) < self.agent.lstm_len:
+        if self.agent.lstm_len == 1 or len(self.lstm_obs) < self.agent.lstm_len:
             action = to_np(self.agent(unsqueeze(obs, axis=0), mode='eval'))[0]
         else:
             # for k in merge_obs:
@@ -134,18 +139,18 @@ class UserPolicy(BasePolicy):
             rgb_list = []
             seg_list = []
             for i in range(self.agent.lstm_len):
-                state_list.append(lstm_obs[i]['state'])
-                xyz_list.append(lstm_obs[i]['pointcloud']['xyz'])
-                rgb_list.append(lstm_obs[i]['pointcloud']['rgb'])
-                seg_list.append(lstm_obs[i]['pointcloud']['seg'])
+                state_list.append(self.lstm_obs[i]['state'])
+                xyz_list.append(self.lstm_obs[i]['pointcloud']['xyz'])
+                rgb_list.append(self.lstm_obs[i]['pointcloud']['rgb'])
+                seg_list.append(self.lstm_obs[i]['pointcloud']['seg'])
 
                 # k = 'state'
-                # merge_obs[k] = [merge_obs[k], lstm_obs[i+1].get(k)]
+                # merge_obs[k] = [merge_obs[k], self.lstm_obs[i+1].get(k)]
                 # k = 'pointcloud'
-                # merge_obs[k] = {sub_k: [merge_obs[k][sub_k], lstm_obs[i+1][k][sub_k]] for sub_k in merge_obs[k]}
-                # merge_obs = {k: [merge_obs[k], lstm_obs[i+1].get(k)] for k in merge_obs}
+                # merge_obs[k] = {sub_k: [merge_obs[k][sub_k], self.lstm_obs[i+1][k][sub_k]] for sub_k in merge_obs[k]}
+                # merge_obs = {k: [merge_obs[k], self.lstm_obs[i+1].get(k)] for k in merge_obs}
             
-            merge_obs = lstm_obs[0]
+            merge_obs = self.lstm_obs[0]
             merge_obs['state'] = np.stack(state_list)
             # print("state: %s" % (str(merge_obs['state'].shape)))
             # k = 'state'
