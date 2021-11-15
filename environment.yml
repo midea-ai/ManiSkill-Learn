@@ -36,8 +36,6 @@ dependencies:
   - more-itertools=8.8.0=pyhd3eb1b0_0
   - nccl=2.8.3.1=hcaf9a05_0
   - ncurses=6.2=he6710b0_1
-  - numpy=1.20.3=py38hf144106_0
-  - numpy-base=1.20.3=py38h74d4b33_0
   - openssl=1.1.1k=h27cfd23_0
   - packaging=21.0=pyhd3eb1b0_0
   - pathlib2=2.3.6=py38h06a4308_2
@@ -54,7 +52,6 @@ dependencies:
   - scipy=1.6.2=py38had2a1c9_1
   - setuptools=52.0.0=py38h06a4308_0
   - shapely=1.7.1=py38h98ec03d_0
-  - six=1.16.0=pyhd3eb1b0_0
   - sqlite=3.36.0=hc218d9a_0
   - tabulate=0.8.9=py38h06a4308_0
   - tk=8.6.10=hbc83047_0
@@ -68,35 +65,46 @@ dependencies:
   - yaml=0.2.5=h7b6447c_0
   - zlib=1.2.11=h7b6447c_3
   - pip:
-    - absl-py==0.15.0
+    - absl-py==0.13.0
     - addict==2.4.0
     - anyio==3.3.0
     - argon2-cffi==20.1.0
     - asttokens==2.0.5
+    - astunparse==1.6.3
     - async-generator==1.10
     - babel==2.9.1
     - backcall==0.2.0
     - bleach==3.3.1
-    - cachetools==4.2.4
+    - cachetools==4.2.2
     - cffi==1.14.6
     - charset-normalizer==2.0.3
-    - cloudpickle==1.6.0
-    - coverage==6.0.2
+    - clang==5.0
+    - click==8.0.1
+    - cloudpickle==1.2.2
     - cycler==0.10.0
     - cython==0.29.24
     - debugpy==1.4.1
     - decorator==5.0.9
     - defusedxml==0.7.1
     - deprecation==2.1.0
+    - dm-control==0.0.364896371
+    - dm-env==1.5
+    - dm-tree==0.1.6
     - entrypoints==0.3
-    - executing==0.8.2
-    - ffmpeg==1.4
-    - google-auth==2.3.0
-    - google-auth-oauthlib==0.4.6
-    - grpcio==1.41.0
-    - gym==0.18.3
-    - h5py==3.5.0
+    - executing==0.8.0
+    - fasteners==0.16.3
+    - flatbuffers==1.12
+    - gast==0.4.0
+    - glfw==2.1.0
+    - google-auth==1.35.0
+    - google-auth-oauthlib==0.4.5
+    - google-pasta==0.2.0
+    - grpcio==1.39.0
+    - gtimer==1.0.0b5
+    - gym==0.15.7
+    - h5py==3.1.0
     - idna==3.2
+    - imageio==2.9.0
     - ipykernel==6.0.3
     - ipython==7.25.0
     - ipython-genutils==0.2.0
@@ -114,23 +122,30 @@ dependencies:
     - jupyterlab-pygments==0.1.2
     - jupyterlab-server==2.6.1
     - jupyterlab-widgets==1.0.0
+    - keras==2.6.0
+    - keras-preprocessing==1.1.2
     - kiwisolver==1.3.1
+    - labmaze==1.0.5
     - littleutils==0.2.2
+    - lxml==4.6.3
     - markdown==3.3.4
     - markupsafe==2.0.1
     - matplotlib==3.4.2
     - matplotlib-inline==0.1.2
     - mistune==0.8.4
+#    - mjrl==1.0.0
+    - mujoco-py==2.0.2.13
     - nbclassic==0.3.1
     - nbclient==0.5.3
     - nbconvert==6.1.0
     - nbformat==5.1.3
     - nest-asyncio==1.5.1
     - notebook==6.4.0
-    - numexpr==2.7.3
+    - numpy==1.19.5
     - oauthlib==3.1.1
     - open3d==0.13.0
     - opencv-python==4.5.3.56
+    - opt-einsum==3.3.0
     - pandas==1.3.0
     - pandocfilters==1.4.3
     - parso==0.8.2
@@ -139,33 +154,37 @@ dependencies:
     - pillow==8.2.0
     - prometheus-client==0.11.0
     - prompt-toolkit==3.0.19
-    - protobuf==3.19.0
+    - protobuf==3.17.3
     - psutil==5.8.0
     - ptyprocess==0.7.0
     - pyasn1==0.4.8
     - pyasn1-modules==0.2.8
+    - pybullet==3.1.7
     - pycparser==2.20
-    - pyglet==1.5.15
+    - pyglet==1.5.0
     - pygments==2.9.0
     - pynvml==11.0.0
+    - pyopengl==3.1.5
     - pyrsistent==0.18.0
     - python-dateutil==2.8.2
-    - pyturbojpeg==1.6.1
     - pytz==2021.1
     - pyzmq==22.1.0
     - requests==2.26.0
     - requests-oauthlib==1.3.0
     - requests-unixsocket==0.2.0
     - rsa==4.7.2
-    - sapien==1.1.1
+    - sapien==1.1.0
     - scikit-learn==0.24.2
     - send2trash==1.7.1
+    - six==1.15.0
     - sniffio==1.2.0
     - sorcery==0.2.1
-    - tables==3.6.1
-    - tensorboard==2.7.0
+    - tensorboard==2.6.0
     - tensorboard-data-server==0.6.1
     - tensorboard-plugin-wit==1.8.0
+    - tensorflow-estimator==2.6.0
+    - tensorflow-gpu==2.6.1
+    - termcolor==1.1.0
     - terminado==0.10.1
     - testpath==0.5.0
     - threadpoolctl==2.2.0
@@ -173,14 +192,14 @@ dependencies:
     - https://download.pytorch.org/whl/cu113/torch-1.10.0%2Bcu113-cp38-cp38-linux_x86_64.whl
     - https://download.pytorch.org/whl/cu113/torchaudio-0.10.0%2Bcu113-cp38-cp38-linux_x86_64.whl
     - https://download.pytorch.org/whl/cu113/torchvision-0.11.1%2Bcu113-cp38-cp38-linux_x86_64.whl
-    - tornado==6.1
     - traitlets==5.0.5
     - trimesh==3.9.24
-    - typing-extensions==3.10.0.2
+    - typing-extensions==3.7.4.3
     - urllib3==1.26.6
     - wcwidth==0.2.5
     - webencodings==0.5.1
     - websocket-client==1.1.0
-    - werkzeug==2.0.2
+    - werkzeug==2.0.1
     - widgetsnbextension==3.5.1
     - yapf==0.31.0
+prefix: /home/quan/anaconda3/envs/mani_skill

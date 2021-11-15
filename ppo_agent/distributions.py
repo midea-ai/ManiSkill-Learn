@@ -33,11 +33,16 @@ class DiagGaussian(nn.Module):
         zeros = torch.zeros(action_mean.size()).to(action_mean.device)
 
         action_logstd = action_logstd(zeros)
-        action_logstd = torch.tanh(action_logstd)  # TODO new
-        self.m = FixedNormal(action_mean, action_logstd.exp())
+        # todo: change
+        action_logstd = torch.sigmoid(action_logstd.exp())
+        # action_logstd = torch.tanh(action_logstd)  # TODO new
+        self.m = FixedNormal(action_mean, action_logstd)
 
     def sample(self):
         return self.m.sample()
+
+    def mode(self):
+        return self.m.mode()
 
     def log_probs(self, action):
         return self.m.log_probs(action)

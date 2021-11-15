@@ -130,7 +130,7 @@ def dict_to_str(inputs):
             if np.abs(inputs[key]).min() < 1E-2:
                 ret += f'{key}:{inputs[key]:.4e}'
             else:
-                ret += f'{key}:{inputs[key]:.6f}'
+                ret += f'{key}:{inputs[key]:.2f}'
         else:
             ret += f'{key}:{inputs[key]}'
     return ret

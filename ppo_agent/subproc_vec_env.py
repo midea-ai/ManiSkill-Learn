@@ -2,6 +2,7 @@ import multiprocessing as mp
 
 import numpy as np
 from baselines.common.vec_env.vec_env import VecEnv, CloudpickleWrapper, clear_mpi_env_vars
+from mani_skill_learn.utils.data import to_torch
 
 
 def worker(remote, parent_remote, env_fn_wrapper):
@@ -97,7 +98,7 @@ class MySubprocVecEnv(VecEnv):
                     vec_obs[keys][sub_keys] = np.asarray(vec_obs[keys][sub_keys])
             else:
                 print('ERROR', type(obs[keys][0]))
-        # obs = to_torch(vec_obs, device=torch.dev, dtype='float32')
+        # vec_obs = to_torch(vec_obs, device=torch.dev, dtype='float32')
         return vec_obs
 
     def step_wait(self):

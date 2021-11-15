@@ -220,12 +220,13 @@ class Model(nn.Module):
         self.policy_header(action_mean, action_logstd)
 
         if self.trainable:
-            if self.sample_mode == "softmax":
-                control = self.policy_header.softmax_sample()
+            if self.sample_mode == "mode":
+                control = self.policy_header.mode()
             else:
                 control = self.policy_header.sample()
         else:
-            control = self.policy_header.sample()
+            # control = self.policy_header.sample()
+            control = self.policy_header.mode()
 
         action_log_probs = self.policy_header.log_probs(control)
         return value.clone().detach(), control.clone().detach(), action_log_probs.clone().detach(), expert_action

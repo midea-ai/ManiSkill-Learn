@@ -203,7 +203,7 @@ class Evaluation:
 
         lstm_obs = []
         while self.episode_id < num:
-            # self.env.render('human')
+            self.env.render('human')
             obs = self.recent_obs
             if self.use_hidden_state:
                 obs = self.env.get_state()

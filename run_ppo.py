@@ -8,7 +8,6 @@ from mani_skill_learn.networks import build_model
 from mani_skill_learn.networks.utils import replace_placeholder_with_args, get_kwargs_from_shape
 from mani_skill_learn.env.env_utils import build_env
 from mani_skill_learn.utils.data import to_torch
-
 from ppo_agent.rollout import RolloutStorage
 from ppo_agent.envs import make_vec_envs
 from ppo_agent.make_maniskill_env import make_maniskill_env

@@ -65,9 +65,15 @@ def train(rank, action_dim, model_cfg, train_cfg, distributed, expert_agent, env
     if expert_agent and warm_up:
         local_model.load_state_dict(expert_agent.state_dict(), strict=False)
         local_model.load_state_dict(expert_agent.backbone.state_dict(), strict=False)
+        del expert_agent
         # for name, p in expert_agent.backbone.named_parameters():
         #     print('in expert---> name: ', name, p.data.mean(), 'p.requires_grad', p.requires_grad)
 
+    if train_cfg['pretrain'] is True and train_cfg['pretrain_cfg_model'] is not None:
+        pretrain_model = torch.load(train_cfg['pretrain_cfg_model'], map_location=device)
+        local_model.load_state_dict(pretrain_model.state_dict())
+        del pretrain_model
+        print('successfully load pretrained model from ', train_cfg['pretrain_cfg_model'])
     local_model.to(device)
 
     # local_model.print_parameters()
@@ -151,7 +157,7 @@ def train(rank, action_dim, model_cfg, train_cfg, distributed, expert_agent, env
 
                     entropy_loss = entropy.mean()
                     # expert_action_l
-                    total_loss = action_coeff * action_loss + value_coeff * value_loss + ent_coeff * entropy_loss
+                    total_loss = action_coeff * action_loss + value_coeff * value_loss - ent_coeff * entropy_loss
                     sum_action_loss += action_loss.item()
                     sum_value_loss += value_loss.item()
                     sum_entropy_loss += entropy_loss.item()

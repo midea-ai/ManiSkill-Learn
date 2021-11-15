@@ -30,21 +30,19 @@ class BC(BaseAgent):
 
     def update_parameters(self, memory, updates):
         sampled_batch = memory.sample(self.batch_size, seq_length=self.lstm_len)
-        # print("before dict: batch cnt: %s", str(sampled_batch['cnt'][:15]))
-        # for key, value in sampled_batch.items():
-        #     print("{0} = {1}".format(key, len(value)))
-        sampled_batch = dict(obs=sampled_batch['obs'], actions=sampled_batch["actions"], cnt=sampled_batch['cnt'])
-        # print("after dict: batch cnt: %s", str(sampled_batch['cnt'][:15]))
+        print("before dict: batch cnt: %s", str(sampled_batch['cnt'][:15]))
+        sampled_batch = dict(obs=sampled_batch['obs'], actions=sampled_batch["actions"])
+        print("after dict: batch cnt: %s", str(sampled_batch['cnt'][:15]))
         sampled_batch = to_torch(sampled_batch, device=self.device, dtype='float32')
         for key in sampled_batch:
             if not isinstance(sampled_batch[key], dict) and sampled_batch[key].ndim == 1:
                 sampled_batch[key] = sampled_batch[key][..., None]
         pred_action = self.policy(sampled_batch['obs'], mode='eval')
         true_action = sampled_batch['actions'][self.lstm_len-1::self.lstm_len]
-        # true_idx = sampled_batch['cnt'][self.lstm_len-1::self.lstm_len]
-        # print('true_action', true_action.shape)
-        # print('true_idx : %s' % str(true_idx[:15]))
-        # print('pred_action', pred_action.shape)
+        true_idx = sampled_batch['cnt'][self.lstm_len-1::self.lstm_len]
+        print('true_action', true_action.shape)
+        print('true_idx : %s' % str(true_idx[:15]))
+        print('pred_action', pred_action.shape)
         # policy_loss = F.mse_loss(pred_action, sampled_batch['actions'])
         policy_loss = F.mse_loss(pred_action, true_action)
         self.policy_optim.zero_grad()

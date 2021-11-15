@@ -10,6 +10,7 @@ from mani_skill_learn.methods.builder import build_brl
 from mani_skill_learn.utils.data import to_np, unsqueeze
 from mani_skill_learn.utils.meta import Config
 from mani_skill_learn.utils.torch import load_checkpoint
+from ppo_agent.model import Model
 
 import os
 
@@ -80,6 +81,40 @@ class UserPolicy(BasePolicy):
         cfg.agent['action_space'] = action_space
 
         self.agent = build_brl(cfg.agent)
+
+        env_config_file = 'configs/ppo/mani_skill_point_cloud_transformer.py'
+        env_config = Config.fromfile(env_config_file)
+        nn_cfg = env_config.agent.policy_cfg.nn_cfg
+
+        replaceable_kwargs = get_kwargs_from_shape(obs_shape, action_shape)
+
+        nn_cfg = replace_placeholder_with_args(nn_cfg, **replaceable_kwargs)
+        nn_cfg.pop('type')
+        env_config.model_cfg['nn_cfg'] = nn_cfg
+        model_cfg = env_config.model_cfg
+        model_cfg['action_dim'] = action_shape
+        model_cfg['trainable'] = False
+        cfg = Config.fromfile(env_config.train_mfrl_cfg.expert_cfg_file)
+        env_config.model_cfg['policy_head_cfg'] = cfg.agent.policy_cfg.policy_head_cfg
+
+
+
+        local_model = Model(**model_cfg)
+        # model_path = '/home/quan/maniskill_model/11-03/20-27-13/models/ppo_model_1000.pt'
+        # failure
+        # model_path = '/home/quan/maniskill_model/11-10/23-22-20/models/ppo_model_500.pt'
+        # failure
+        model_path = '/home/quan/maniskill_model/11-10/23-27-51/models/ppo_model_500.pt'
+        # model_path = '/home/quan/maniskill_model/11-11/21-50-40/models/ppo_model_500.pt'
+        # model_path = '/home/quan/maniskill_model/11-11/21-50-40/models/ppo_model_1500.pt'
+        learnt_model = torch.load(model_path, map_location=device)
+        local_model.load_state_dict(learnt_model.state_dict())
+        local_model.trainable = False
+        local_model.eval()
+        # local_model.to_device(device)
+        local_model.to(device)
+        del learnt_model
+
         if env_name.find('Bucket') >= 0:
             ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/cql_transformer_bucket/CQL/models/model_115000.ckpt')
         if env_name.find('Chair') >= 0:
@@ -87,7 +122,8 @@ class UserPolicy(BasePolicy):
         if env_name.find('Door') >= 0:
             ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/cql_transformer_door/CQL/models/model_90000.ckpt')
         if env_name.find('Drawer') >= 0:
-            ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/cql_transformer_drawer/CQL/models/model_90000.ckpt')
+            # ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/cql_transformer_drawer/CQL/models/model_90000.ckpt')
+            ckpt_path = os.path.join(os.path.dirname(__file__), '../work_dirs/PPO_drawer/11-10/23-27-51/models/ppo_model_500.pt')
         # load_checkpoint(self.agent,
         #     str(pathlib.Path('./example_mani_skill_data/OpenCabinetDrawer_1045_link_0-v0_PN_Transformer.ckpt').resolve()),
         #     map_location='cpu'

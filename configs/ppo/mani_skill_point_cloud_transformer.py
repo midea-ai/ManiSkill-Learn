@@ -42,6 +42,7 @@ rollout_cfg = dict(
     num_steps=256,
     num_process=4,
     # num_process=1,
+    # num_process=1,
     # num_steps=32,
     mini_batch_num=4,
     use_gae=True,
@@ -51,6 +52,7 @@ rollout_cfg = dict(
 
 model_cfg = dict(
     sample_mode='sample',
+    # sample_mode='mode',
     latent_dim=256
 )
 
@@ -61,8 +63,19 @@ train_mfrl_cfg = dict(
     # use_adv_norm=False,
     warm_up=True,
     # warm_up=False,
+    expert_cfg_file='configs/bc/mani_skill_point_cloud_transformer.py',
+    # expert_cfg_model='/home/quan/ManiSkill-Learn/full_mani_skill_data/models/OpenCabinetDrawer-v0_PN_Transformer.ckpt',
+    expert_cfg_model='/home/liuchi/zhaoyinuo/ManiSkill-Learn/full_mani_skill_data/models/OpenCabinetDrawer-v0_PN_Transformer.ckpt',
+    # pretrain=True,
+    pretrain=False,
+    pretrain_cfg_model='/home/liuchi/zhaoyinuo/maniskill_model/11-10/23-27-51/models/ppo_model_500.pt',
+    # pretrain_cfg_model='/home/quan/maniskill_model/11-10/23-27-51/models/ppo_model_500.pt',
     ppo_epoch=4,
     clip=0.1,
+    # value_coeff=0.1,
+    # action_coeff=1.0,
+    # ent_coeff=0.01,
+
     value_coeff=0.01,
     action_coeff=10.0,
     ent_coeff=0.1,
@@ -74,9 +87,7 @@ train_mfrl_cfg = dict(
     # root_path='/home/quan/maniskill_model',
     root_path='/home/liuchi/zhaoyinuo/maniskill_model',
     env_mode='pointcloud',
-    expert_cfg_file='configs/bc/mani_skill_point_cloud_transformer.py',
-    # expert_cfg_model='/home/quan/ManiSkill-Learn/full_mani_skill_data/models/OpenCabinetDrawer-v0_PN_Transformer.ckpt',
-    expert_cfg_model='/home/liuchi/zhaoyinuo/ManiSkill-Learn/full_mani_skill_data/models/OpenCabinetDrawer-v0_PN_Transformer.ckpt',
+
 
 )
 

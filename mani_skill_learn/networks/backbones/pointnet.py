@@ -192,17 +192,13 @@ class PointNetWithInstanceInfoV0(PointBackbone):
 
         if self.global_lstm is not None:
             # obs : [L, batch, input]
-            # print('used LSTM')
             L = self.lstm_len
             if B == 1:
                 global_feature = global_feature.view(1, 1, -1)
                 global_feature = global_feature.repeat(L, 1, 1)
             else:
                 B = B // L 
-                # wrong!!
-                # global_feature = global_feature.view(L, B, -1)
-                global_feature = global_feature.view(B, L, -1)
-                global_feature = global_feature.permute(1, 0, 2)
+                global_feature = global_feature.view(L, B, -1)
             # print('global_feature: ', global_feature.shape)
             outputs, (ht, ct) = self.global_lstm(global_feature)
             # ht is the last hidden state of the sequences
@@ -214,7 +210,6 @@ class PointNetWithInstanceInfoV0(PointBackbone):
         random_global_features = []
         cur_device = global_feature.get_device()
         for i in range(len(self.eigen_vectors)):
-            # print('used eigen_vectors %d' % i)
             tmp_eigen_vector = self.eigen_vectors[i].to(cur_device).detach()
             tmp = global_feature * tmp_eigen_vector
             # print('#########################')
